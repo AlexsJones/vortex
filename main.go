@@ -2,11 +2,12 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"html/template"
 	"io/ioutil"
 	"log"
 	"os"
+
+	"github.com/fatih/color"
 
 	yaml "gopkg.in/yaml.v2"
 )
@@ -60,5 +61,5 @@ func main() {
 		return
 	}
 
-	fmt.Println(tout)
+	color.Green("Done")
 }
