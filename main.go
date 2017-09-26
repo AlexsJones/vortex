@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -25,6 +26,7 @@ func main() {
 	flag.Parse()
 
 	if *t == "" || *vars == "" || *output == "" {
+		fmt.Println("vortex is a simple program to combine a template with a yaml file of defined varibles it uses golang {{.var}} format with standard yaml")
 		flag.Usage()
 		return
 	}
