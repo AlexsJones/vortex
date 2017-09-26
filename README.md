@@ -7,6 +7,6 @@ A simple template reader and variable injector
 ## Usage
 
 ```
-go run main.go -template example/demo.tmpl -output test.txt -varpath example/vars.yaml
+vortex -template example/demo.tmpl -output test.txt -varpath example/vars.yaml
 
 ```
