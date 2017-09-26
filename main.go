@@ -22,6 +22,11 @@ func main() {
 	var vars = flag.String("varpath", "", "path to var yaml to populate")
 	var output = flag.String("output", "", "name of output file")
 	flag.Parse()
+
+	if *t == "" || *vars == "" || *output == "" {
+		flag.Usage()
+		return
+	}
 	//Parse template -------------------------------------
 	tout, err := template.ParseFiles(*t)
 	if err != nil {
