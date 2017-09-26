@@ -1,2 +1,3 @@
-name: "test"
-image: "us.gcr.io/test"
+api:
+  name: "test"
+  image: "us.gcr.io/test"
