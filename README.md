@@ -47,3 +47,38 @@ spec:
 vortex -template example/demo.tmpl -output test.txt -varpath example/vars.yaml
 
 ```
+
+## Scripting
+
+With the following setup it is very trivial to script a simple way of parsing many templates
+```
+environments/
+           production.yaml
+templates/
+          api/
+             kubernetes-deployment.yaml
+          web/
+             service.yaml
+deployment/
+```
+
+```
+rm -rf deployment || true
+
+for d in ./templates/**/*; do
+    filename=$(dirname $d)
+    foldername=`echo basename $filename`
+    folderaltered=$(echo $foldername | sed 's/templates/deployment/g')
+    echo "Creating $folderaltered"
+    mkdir -p deployment/$folderaltered
+
+   newpath=$(echo $d | sed 's/templates/deployment/g')
+
+   vortex --template $d --output $newpath -varpath ./environments/$1.yaml
+done
+
+```
+```
+./script.sh production
+```
+
