@@ -82,3 +82,28 @@ done
 ./script.sh production
 ```
 
+### Other examples
+```
+build:
+  commands: docker build --no-cache=true -t {{ .name }}:{{ .version }} .
+  docker:
+    containerID: {{ .name }}:{{ .version }}
+    buildArgs:
+      url: {{ .repoistory }}/{{ .name }}:{{ .version }}
+kubernetes:
+  namespace: {{ .namespace }}
+  service: |-
+    kind: Service
+    apiVersion: v1
+    metadata:
+      name: {{ .name }}
+      namespace: {{ .namespace }}
+    spec:
+      type: NodePort
+      selector:
+        app: {{ .name }}
+      ports:
+        - protocol: TCP
+          port: 9090
+          name: openport
+ ```
