@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"html/template"
 	"io/ioutil"
 	"log"
 	"os"
+	"text/template"
 
 	"github.com/fatih/color"
 
