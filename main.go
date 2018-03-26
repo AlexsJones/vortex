@@ -51,7 +51,7 @@ func main() {
 		log.Print(err)
 		return
 	}
-	m := make(map[string]string)
+	m := make(map[string]interface{})
 	err = yaml.Unmarshal(bytes, m)
 	if err != nil {
 		log.Print("yaml: ", err)
