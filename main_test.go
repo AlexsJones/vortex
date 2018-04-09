@@ -6,29 +6,52 @@ import (
 
 	. "github.com/AlexsJones/vortex"
 	"io/ioutil"
-	"strings"
 	"os"
+	"fmt"
 )
 
 var _ = Describe("Running the main application with valid parameters", func() {
+	Context("When running with an output directory that doesn't exist", func() {
+		It("Should create the output directory", func() {
+			// Given I have a directory name that doesn't exist
+			// When I try to run vortex
+			// Then vortex will try to create the output directory for me
+			testOutputDir := "this-dir-doesnt-exist"
+			err := CreateOutputDirectoryIfDoesntExist(testOutputDir)
+			if err != nil {
+				Fail(err.Error())
+			}
+
+			Expect(testOutputDir).To(BeADirectory())
+
+			// Cleanup
+			os.RemoveAll(testOutputDir)
+		})
+	})
+
 	Context("When provide a template file, a variable file and an output directory", func() {
 		It("It should output the rendered template in the output directory", func() {
 			// Setup
-			os.MkdirAll("test_output", 0700)
+			testFiles := "test_files"
+			templateFile := "test1.yaml"
+			envFile := "env1.yaml"
+			testOutput := "test_output"
+			os.MkdirAll(testOutput, 0700)
 
 			// Given + When
-			ParseSingleTemplate("test_files/test1.yaml", "test_output", "test_files/env1.yaml")
+
+			ParseSingleTemplate(fmt.Sprint(testFiles, "/", templateFile), testOutput, fmt.Sprint(testFiles, "/", envFile))
 			// Then
-			content, err := ioutil.ReadFile("test_output/test1.txt")
+			content, err := ioutil.ReadFile(fmt.Sprint(testOutput, "/", templateFile))
 			if err != nil {
 				Fail(err.Error())
 			}
 
 			expectedSubstring := "name: test-name"
-			Expect(strings.Contains(string(content), expectedSubstring))
+			Expect(string(content)).To(ContainSubstring(expectedSubstring))
 
 			// Cleanup
-			os.RemoveAll("test_output")
+			os.RemoveAll(testOutput)
 		})
 	})
 })
