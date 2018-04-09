@@ -100,4 +100,27 @@ var _ = Describe("Running vortex with valid parameters", func() {
 			os.RemoveAll(testOutput)
 		})
 	})
+
+	Context("With a template directory, a variable file and an output directory", func() {
+		It("It should ignore nested subdirectories in the template directory", func() {
+			// Setup
+			testFiles := "test_files"
+
+			varFile := "vars.yaml"
+			testOutput := "test_output"
+			subdirectoryToIgnore := "sub_directory"
+			os.MkdirAll(testOutput, 0700)
+
+			// When
+			ParseDirectoryTemplates(testFiles, testOutput, fmt.Sprint(testFiles, "/", varFile))
+
+			// Then
+			if _, err := os.Stat(fmt.Sprint(testOutput, "/", subdirectoryToIgnore)); os.IsNotExist(err) {
+				os.RemoveAll(testOutput)
+				return
+			} else {
+				Fail("Subdirectory was not ignored")
+			}
+		})
+	})
 })
