@@ -102,8 +102,10 @@ func ParseDirectoryTemplates(tempDirectory string, outDirectory string, vars str
 	}
 
 	for _, f := range files {
-		if err := ParseSingleTemplate(fmt.Sprint(tempDirectory, "/", f.Name()), outDirectory, vars); err != nil {
-			return err
+		if !f.IsDir() {
+			if err := ParseSingleTemplate(fmt.Sprint(tempDirectory, "/", f.Name()), outDirectory, vars); err != nil {
+				return err
+			}
 		}
 	}
 
