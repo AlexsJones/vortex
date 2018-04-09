@@ -1,0 +1,18 @@
+---
+language: go
+
+os:
+  - linux
+  - osx
+
+go:
+  - "1.8"
+  - "1.9"
+  - "1.10"
+
+install:
+  - go get -v ./...
+
+script:
+  - go vet -v ./...
+  - go test -v -cover ./...
