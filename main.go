@@ -168,7 +168,7 @@ func varFileHasExpectedVariables(templateFile string, varFile string) (bool, err
 
 	for _, eVar := range expectedVars {
 		if _, ok := varMap[eVar[1]]; !ok {
-			log.Printf("Could not find variable: %s in %s", eVar[1], varFile)
+			log.Printf("Could not find variable: %s, required by %s, in %s", eVar[1], templateFile, varFile)
 			return false, nil
 		}
 	}
