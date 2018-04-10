@@ -3,11 +3,11 @@ package processor
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"io/ioutil"
 	"os"
 	"path"
 	"regexp"
+	"text/template"
 
 	yaml "gopkg.in/yaml.v2"
 )
@@ -45,15 +45,17 @@ func (v *Vortex) ProcessTemplates(templateroot, outputroot string) error {
 	if err != nil {
 		return err
 	}
-	// Given that the common case is that we are processing a directory worth of files
 	for _, file := range files {
 		readpath := path.Join(outputroot, file.Name())
 		switch {
 		case file.IsDir():
-			return v.ProcessTemplates(readpath, path.Join(outputroot, file.Name()))
+			outputroot = path.Join(outputroot, file.Name())
+			if err := v.ProcessTemplates(readpath, outputroot); err != nil {
+				return err
+			}
 		default:
 			// If the file extension doesn't match what we expect then ignore it
-			if !regexp.MustCompile("$\\.ya?ml^").MatchString(file.Name()) {
+			if !regexp.MustCompile("$[a-zA-Z0-9]+\\.ya?ml^").MatchString(file.Name()) {
 				continue
 			}
 			if err = v.processTemplate(readpath, outputroot); err != nil {
