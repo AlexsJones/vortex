@@ -79,13 +79,14 @@ func main() {
 
 func InputFilesAreValid(template string, varFile string) (bool, error) {
 	if stat, err := os.Stat(template); err == nil && stat.IsDir() {
-		if !varFileIsValid(varFile) {
-			return false, nil
+		isValid, err := varFileIsValid(varFile)
+		if err != nil || !isValid {
+			return false, err
 		}
 
 		var templates []string
 
-		err := filepath.Walk(template, func(path string, info os.FileInfo, err error) error {
+		err = filepath.Walk(template, func(path string, info os.FileInfo, err error) error {
 			if info.IsDir() {
 				return nil
 			}
@@ -96,7 +97,6 @@ func InputFilesAreValid(template string, varFile string) (bool, error) {
 			}
 
 			return nil
-
 		})
 
 		if err != nil {
@@ -126,11 +126,12 @@ func InputFilesAreValid(template string, varFile string) (bool, error) {
 		return true, nil
 	}
 
-	if !varFileIsValid(varFile) {
-		return false, nil
+	isValid, err := varFileIsValid(varFile)
+	if err != nil || !isValid {
+		return false, err
 	}
 
-	isValid, err := templateFileIsValid(template)
+	isValid, err = templateFileIsValid(template)
 	if err != nil {
 		return false, err
 	}
@@ -167,6 +168,7 @@ func varFileHasExpectedVariables(templateFile string, varFile string) (bool, err
 
 	for _, eVar := range expectedVars {
 		if _, ok := varMap[eVar[1]]; !ok {
+			log.Printf("Could not find variable: %s, required by %s, in %s", eVar[1], templateFile, varFile)
 			return false, nil
 		}
 	}
@@ -186,18 +188,20 @@ func templateFileIsValid(templateFile string) (bool, error) {
 	m := make(map[string]interface{})
 	err = yaml.Unmarshal(bytes, m)
 	if err != nil {
+		log.Printf("Failed to validate syntax: %s", templateFile)
 		return false, err
 	}
 
 	return true, nil
 }
 
-func varFileIsValid(varFile string) bool {
+func varFileIsValid(varFile string) (bool, error) {
 	if _, err := readVars(varFile); err != nil {
-		return false
+		log.Printf("Failed to validate syntax: %s", varFile)
+		return false, err
 	}
 
-	return true
+	return true, nil
 }
 
 func ParseSingleTemplate(tempName string, out string, vars string) error {

@@ -155,7 +155,7 @@ templatepreamble: # some preamble
 			varsFile := "test_files/badvars.yaml"
 			areValid, err := InputFilesAreValid(templateFile, varsFile)
 			Expect(areValid).To(BeFalse())
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).To(HaveOccurred())
 		})
 	})
 
