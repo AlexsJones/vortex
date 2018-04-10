@@ -11,8 +11,11 @@ import (
 
 	"github.com/fatih/color"
 
-	"gopkg.in/yaml.v2"
 	"path/filepath"
+
+	"gopkg.in/yaml.v2"
+	"regexp"
+	"strings"
 )
 
 /*********************************************************************************
@@ -29,7 +32,29 @@ func main() {
 	t := flag.String("template", "", "path to template to populate")
 	vars := flag.String("varpath", "", "path to var yaml to populate")
 	output := flag.String("output", "", "name of output file")
+	validate := flag.Bool("validate", false, "validate syntax and check for required variables")
 	flag.Parse()
+
+	if *validate {
+		if *t == "" || *vars == "" {
+			fmt.Println("To validate a file with vortex, pass a template file and variable file")
+			flag.Usage()
+			return
+		}
+
+		inputFilesAreValid, err := InputFilesAreValid(*t, *vars)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if inputFilesAreValid {
+			fmt.Println("template and var files are valid")
+			return
+		}
+
+		fmt.Println("Could not validate due to either syntax errors in the files, or the expected variables not existing in the var file")
+		os.Exit(1)
+	}
 
 	if *t == "" || *vars == "" || *output == "" {
 		fmt.Println("vortex is a simple program to combine a template with a yaml file of defined varibles it uses golang {{.var}} format with standard yaml")
@@ -50,7 +75,129 @@ func main() {
 			log.Fatal(err)
 		}
 	}
+}
 
+func InputFilesAreValid(template string, varFile string) (bool, error) {
+	if stat, err := os.Stat(template); err == nil && stat.IsDir() {
+		if !varFileIsValid(varFile) {
+			return false, nil
+		}
+
+		var templates []string
+
+		err := filepath.Walk(template, func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() {
+				return nil
+			}
+
+			if strings.HasSuffix(info.Name(), ".yaml") {
+				templates = append(templates, path)
+				return nil
+			}
+
+			return nil
+
+		})
+
+		if err != nil {
+			return false, err
+		}
+
+		for _, t := range templates {
+			isValid, err := templateFileIsValid(t)
+			if err != nil {
+				return false, err
+			}
+
+			if !isValid {
+				return false, nil
+			}
+
+			isValid, err = varFileHasExpectedVariables(t, varFile)
+			if err != nil {
+				return false, err
+			}
+
+			if !isValid {
+				return false, nil
+			}
+		}
+
+		return true, nil
+	}
+
+	if !varFileIsValid(varFile) {
+		return false, nil
+	}
+
+	isValid, err := templateFileIsValid(template)
+	if err != nil {
+		return false, err
+	}
+
+	if !isValid {
+		return false, nil
+	}
+
+	isValid, err = varFileHasExpectedVariables(template, varFile)
+	if err != nil {
+		return false, err
+	}
+
+	if !isValid {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func varFileHasExpectedVariables(templateFile string, varFile string) (bool, error) {
+	varMap, err := readVars(varFile)
+	if err != nil {
+		return false, err
+	}
+
+	bytes, err := ioutil.ReadFile(templateFile)
+	if err != nil {
+		return false, err
+	}
+
+	r := regexp.MustCompile(`{{\s{0,1}\.(.*?)\s{0,1}}}`)
+	expectedVars := r.FindAllStringSubmatch(string(bytes), -1)
+
+	for _, eVar := range expectedVars {
+		if _, ok := varMap[eVar[1]]; !ok {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
+
+func templateFileIsValid(templateFile string) (bool, error) {
+	bytes, err := ioutil.ReadFile(templateFile)
+	if err != nil {
+		return false, err
+	}
+
+	r := regexp.MustCompile(`{{\s{0,1}\..*\s{0,1}}}`)
+	bytes = r.ReplaceAll(bytes, []byte("# placeholder"))
+
+	m := make(map[string]interface{})
+	err = yaml.Unmarshal(bytes, m)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func varFileIsValid(varFile string) bool {
+	if _, err := readVars(varFile); err != nil {
+		return false
+	}
+
+	return true
 }
 
 func ParseSingleTemplate(tempName string, out string, vars string) error {
@@ -74,18 +221,9 @@ func ParseSingleTemplate(tempName string, out string, vars string) error {
 	workDir := os.Getenv("PWD")
 	os.Chdir(workDir)
 
-	bytes, err := ioutil.ReadFile(vars)
-	if err != nil {
-		return err
-	}
+	varMap, err := readVars(vars)
 
-	m := make(map[string]interface{})
-	err = yaml.Unmarshal(bytes, m)
-	if err != nil {
-		return err
-	}
-
-	err = tout.Execute(outputFile, m)
+	err = tout.Execute(outputFile, varMap)
 	if err != nil {
 		return err
 	}
@@ -93,6 +231,21 @@ func ParseSingleTemplate(tempName string, out string, vars string) error {
 	color.Green("Done")
 
 	return nil
+}
+
+func readVars(varFile string) (map[string]interface{}, error) {
+	bytes, err := ioutil.ReadFile(varFile)
+	if err != nil {
+		return nil, err
+	}
+
+	m := make(map[string]interface{})
+	err = yaml.Unmarshal(bytes, m)
+	if err != nil {
+		return nil, err
+	}
+
+	return m, err
 }
 
 func ParseDirectoryTemplates(tempDirectory string, outDirectory string, vars string) error {

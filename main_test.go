@@ -5,9 +5,10 @@ import (
 	. "github.com/onsi/gomega"
 
 	"fmt"
-	. "github.com/AlexsJones/vortex"
 	"io/ioutil"
 	"os"
+
+	. "github.com/AlexsJones/vortex"
 )
 
 var _ = Describe("Running vortex with invalid parameters", func() {
@@ -27,6 +28,213 @@ var _ = Describe("Running vortex with invalid parameters", func() {
 		It("Should throw an error", func() {
 			err := InputParametersCheck(&templateFile, &testOutputDir, &invalidFile)
 			Expect(err).To(HaveOccurred())
+		})
+	})
+})
+
+var _ = Describe("Running the vortex validator", func() {
+	Context("With non-yaml files in a directory containing yaml template files", func() {
+		It("Should only try to validate yaml files", func() {
+			template := []byte(`a: {{.var}}`)
+			vars := []byte(`var: some-var`)
+			readme := []byte(`SOME MARKDOWN HERE * * VERY NICE * *`)
+
+			err := os.MkdirAll("tmp", 0700)
+			Expect(err).ToNot(HaveOccurred())
+			err = ioutil.WriteFile("tmp/README.md", readme, 0700)
+			Expect(err).ToNot(HaveOccurred())
+			err = ioutil.WriteFile("tmp/template.yaml", template, 0700)
+			Expect(err).ToNot(HaveOccurred())
+			err = ioutil.WriteFile("vars.yaml", vars, 0700)
+			Expect(err).ToNot(HaveOccurred())
+
+			areValid, err := InputFilesAreValid("tmp", "vars.yaml")
+			Expect(areValid).To(BeTrue())
+			Expect(err).ToNot(HaveOccurred())
+
+			os.RemoveAll("tmp")
+			os.RemoveAll("vars.yaml")
+		})
+	})
+
+	Context("With nested subdirectories of containing an invalid template", func() {
+		It("Should fail validation", func() {
+			validTemplate := []byte(`apiVersion: v1
+kind: Pod
+metadata:
+ name: {{.name}}
+spec:
+ restartPolicy: Always
+ containers:
+   - name: test
+     image: {{.image}}
+`)
+
+			invalidTemplate := []byte(`apiVersion: v1
+kind: Pod
+metadata:
+ name: {{.name}}
+spec:
+ restartPolicy: Always
+ containers:
+   - name: test
+     image: {{.anotherimage}}
+`)
+
+			vars := []byte(`name: some-name
+image: some-image
+`)
+
+			err := os.MkdirAll("tmp/one", 0700)
+			Expect(err).ToNot(HaveOccurred())
+			err = os.MkdirAll("tmp/two", 0700)
+			Expect(err).ToNot(HaveOccurred())
+
+			template1 := "tmp/one/template1.yaml"
+			template2 := "tmp/two/template2.yaml"
+			varFile := "vars.yaml"
+
+			err = ioutil.WriteFile(template1, validTemplate, 0700)
+			Expect(err).ToNot(HaveOccurred())
+			err = ioutil.WriteFile(template2, invalidTemplate, 0700)
+			Expect(err).ToNot(HaveOccurred())
+			err = ioutil.WriteFile(varFile, vars, 0700)
+			Expect(err).ToNot(HaveOccurred())
+
+			areValid, err := InputFilesAreValid("tmp", varFile)
+			Expect(areValid).To(BeFalse())
+			Expect(err).ToNot(HaveOccurred())
+
+			os.RemoveAll("tmp/one")
+			os.RemoveAll("tmp/two")
+			os.RemoveAll("tmp")
+			os.Remove("vars.yaml")
+		})
+	})
+
+	Context("With a preamble comment in the yaml template", func() {
+		It("Should pass validation", func() {
+			template := []byte(`{{.templatepreamble}}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{.name}}
+spec:
+  restartPolicy: Always
+  containers:
+    - name: test
+      image: {{.image}}
+`)
+
+			vars := []byte(`name: some-name
+image: some-image
+templatepreamble: # some preamble
+`)
+
+			err := os.Mkdir("tmp", 0700)
+			Expect(err).ToNot(HaveOccurred())
+			err = ioutil.WriteFile("tmp/template.yaml", template, 0700)
+			Expect(err).ToNot(HaveOccurred())
+			err = ioutil.WriteFile("tmp/vars.yaml", vars, 0700)
+			Expect(err).ToNot(HaveOccurred())
+
+			templateFile := "tmp/template.yaml"
+			varsFile := "tmp/vars.yaml"
+
+			areValid, err := InputFilesAreValid(templateFile, varsFile)
+			Expect(areValid).To(BeTrue())
+			Expect(err).ToNot(HaveOccurred())
+
+			os.RemoveAll("tmp")
+		})
+	})
+
+	Context("With invalid syntax in a variables file", func() {
+		It("Should fail validation", func() {
+			templateFile := "test_files/test1.yaml"
+			varsFile := "test_files/badvars.yaml"
+			areValid, err := InputFilesAreValid(templateFile, varsFile)
+			Expect(areValid).To(BeFalse())
+			Expect(err).ToNot(HaveOccurred())
+		})
+	})
+
+	Context("With {{.var}} syntax in a template file", func() {
+		It("Should pass validation", func() {
+			templateFile := "test_files/test1.yaml"
+			varsFile := "test_files/vars.yaml"
+			areValid, err := InputFilesAreValid(templateFile, varsFile)
+			Expect(areValid).To(BeTrue())
+			Expect(err).ToNot(HaveOccurred())
+		})
+	})
+
+	Context("With invalid syntax in a template file", func() {
+		It("Should fail validation", func() {
+			templateFile := "test_files/badtemplate.yaml"
+			varsFile := "test_files/vars.yaml"
+			areValid, err := InputFilesAreValid(templateFile, varsFile)
+			Expect(areValid).To(BeFalse())
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
+	Context("With valid template and var files with fully corresponding variables", func() {
+		It("Should pass validation", func() {
+			templateFile := "test_files/test2.yaml"
+			varsFile := "test_files/vars.yaml"
+			areValid, err := InputFilesAreValid(templateFile, varsFile)
+			Expect(areValid).To(BeTrue())
+			Expect(err).ToNot(HaveOccurred())
+		})
+	})
+
+	Context("With a templated variable that doesn't exist in the given var file", func() {
+		It("Should fail validation", func() {
+			templateFile := "test_files/test3.yaml"
+			varsFile := "test_files/vars.yaml"
+			areValid, err := InputFilesAreValid(templateFile, varsFile)
+			Expect(areValid).To(BeFalse())
+			Expect(err).ToNot(HaveOccurred())
+		})
+	})
+
+	Context("With a directory of valid templates and a valid var file with fully corresponding variables", func() {
+		It("Should pass validation", func() {
+			templateDir := "tmp1"
+			varFileDir := "tmp2"
+			validTemplate := []byte(`apiVersion: v1
+kind: Pod
+metadata:
+  name: {{.name}}
+spec:
+  restartPolicy: Always
+  containers:
+    - name: test
+      image: {{.image}}
+`)
+
+			validVarFile := []byte(`name: some-name
+image: some-image
+`)
+			err := os.Mkdir(templateDir, 0700)
+			Expect(err).ToNot(HaveOccurred())
+			err = os.Mkdir(varFileDir, 0700)
+			Expect(err).ToNot(HaveOccurred())
+
+			err = ioutil.WriteFile("tmp1/template1.yaml", validTemplate, 0644)
+			Expect(err).ToNot(HaveOccurred())
+			err = ioutil.WriteFile("tmp1/template2.yaml", validTemplate, 0644)
+			Expect(err).ToNot(HaveOccurred())
+			err = ioutil.WriteFile("tmp2/vars.yaml", validVarFile, 0644)
+			Expect(err).ToNot(HaveOccurred())
+
+			areValid, err := InputFilesAreValid(templateDir, "tmp2/vars.yaml")
+			Expect(areValid).To(BeTrue())
+			Expect(err).ToNot(HaveOccurred())
+
+			os.RemoveAll(varFileDir)
+			os.RemoveAll(templateDir)
 		})
 	})
 })
