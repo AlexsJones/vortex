@@ -5,7 +5,6 @@ env:
   - DEP_VERSION="0.4.1"
 os:
   - linux
-  - osx
 
 go:
   - "1.8"
@@ -20,5 +19,5 @@ install:
   - dep ensure
 
 script:
-  - go vet -v ./...
-  - go test -v -cover ./...
+  - go vet -v $(go list ./... | grep -v /vendor/)
+  - go test -v -cover $(go list ./... | grep -v /vendor/)
