@@ -33,6 +33,30 @@ var _ = Describe("Running vortex with invalid parameters", func() {
 })
 
 var _ = Describe("Running the vortex validator", func() {
+	Context("With non-yaml files in a directory containing yaml template files", func() {
+		It("Should only try to validate yaml files", func() {
+			template := []byte(`a: {{.var}}`)
+			vars := []byte(`var: some-var`)
+			readme := []byte(`SOME MARKDOWN HERE * * VERY NICE * *`)
+
+			err := os.MkdirAll("tmp", 0700)
+			Expect(err).ToNot(HaveOccurred())
+			err = ioutil.WriteFile("tmp/README.md", readme, 0700)
+			Expect(err).ToNot(HaveOccurred())
+			err = ioutil.WriteFile("tmp/template.yaml", template, 0700)
+			Expect(err).ToNot(HaveOccurred())
+			err = ioutil.WriteFile("vars.yaml", vars, 0700)
+			Expect(err).ToNot(HaveOccurred())
+
+			areValid, err := InputFilesAreValid("tmp", "vars.yaml")
+			Expect(areValid).To(BeTrue())
+			Expect(err).ToNot(HaveOccurred())
+
+			os.RemoveAll("tmp")
+			os.RemoveAll("vars.yaml")
+		})
+	})
+
 	Context("With nested subdirectories of containing an invalid template", func() {
 		It("Should fail validation", func() {
 			validTemplate := []byte(`apiVersion: v1

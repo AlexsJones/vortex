@@ -15,6 +15,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 	"regexp"
+	"strings"
 )
 
 /*********************************************************************************
@@ -89,8 +90,13 @@ func InputFilesAreValid(template string, varFile string) (bool, error) {
 				return nil
 			}
 
-			templates = append(templates, path)
+			if strings.HasSuffix(info.Name(), ".yaml") {
+				templates = append(templates, path)
+				return nil
+			}
+
 			return nil
+
 		})
 
 		if err != nil {
