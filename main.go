@@ -52,7 +52,6 @@ func main() {
 			return
 		}
 
-		fmt.Println("Could not validate due to either syntax errors in the files, or the expected variables not existing in the var file")
 		os.Exit(1)
 	}
 
@@ -204,19 +203,13 @@ func varFileIsValid(varFile string) (bool, error) {
 	return true, nil
 }
 
-func ParseSingleTemplate(tempName string, out string, vars string) error {
-	tout, err := template.ParseFiles(tempName)
+func ParseSingleTemplate(templateFile string, outputFilePath string, varFilePath string) error {
+	tout, err := template.ParseFiles(templateFile)
 	if err != nil {
 		return err
 	}
 
-	outputFileName := filepath.Base(tempName)
-
-	if err := os.Chdir(out); err != nil {
-		return err
-	}
-
-	outputFile, err := os.Create(outputFileName)
+	outputFile, err := os.Create(outputFilePath)
 	if err != nil {
 		return err
 	}
@@ -225,13 +218,14 @@ func ParseSingleTemplate(tempName string, out string, vars string) error {
 	workDir := os.Getenv("PWD")
 	os.Chdir(workDir)
 
-	varMap, err := readVars(vars)
+	varMap, err := readVars(varFilePath)
 
 	err = tout.Execute(outputFile, varMap)
 	if err != nil {
 		return err
 	}
 
+	log.Printf("Creating: %s", outputFilePath)
 	color.Green("Done")
 
 	return nil
@@ -253,16 +247,38 @@ func readVars(varFile string) (map[string]interface{}, error) {
 }
 
 func ParseDirectoryTemplates(tempDirectory string, outDirectory string, vars string) error {
-	files, err := ioutil.ReadDir(tempDirectory)
+	var templates []string
+	var directories []string
+
+	err := filepath.Walk(tempDirectory, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			directories = append(directories, path)
+			return nil
+		}
+
+		if strings.HasSuffix(info.Name(), ".yaml") {
+			templates = append(templates, path)
+			return nil
+		}
+
+		return nil
+	})
+
 	if err != nil {
 		return err
 	}
 
-	for _, f := range files {
-		if !f.IsDir() {
-			if err := ParseSingleTemplate(fmt.Sprint(tempDirectory, "/", f.Name()), outDirectory, vars); err != nil {
-				return err
-			}
+	for _, dir := range directories {
+		directoryPath := strings.Replace(dir, tempDirectory, outDirectory, -1)
+		if err := createOutputDirectoryIfDoesntExist(directoryPath); err != nil {
+			return err
+		}
+	}
+
+	for _, t := range templates {
+		outputFilePath := strings.Replace(t, tempDirectory, outDirectory, -1)
+		if err := ParseSingleTemplate(t, outputFilePath, vars); err != nil {
+			return err
 		}
 	}
 
@@ -316,7 +332,7 @@ func isDirectoryOfTemplates(tempName string) bool {
 
 func createOutputDirectoryIfDoesntExist(output string) error {
 	if _, err := os.Stat(output); os.IsNotExist(err) {
-		if err := os.Mkdir(output, 0700); err != nil {
+		if err := os.MkdirAll(output, 0700); err != nil {
 			return err
 		}
 	}
