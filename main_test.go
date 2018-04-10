@@ -256,17 +256,16 @@ var _ = Describe("Running vortex with valid parameters", func() {
 		})
 	})
 
-	Context("With a template file, a variable file and an output directory", func() {
-		It("It should output the rendered template in the output directory", func() {
-			testFiles := "test_files"
-			templateFile := "test1.yaml"
-			varFile := "vars.yaml"
-			testOutput := "test_output"
-			os.MkdirAll(testOutput, 0700)
+	Context("With a template file, a variable file and an output path", func() {
+		It("It should output the rendered template at the output path", func() {
+			templateFilePath := "test_files/test1.yaml"
+			varFilePath := "test_files/vars.yaml"
+			outputFilePath := "test_output.yaml"
 
-			ParseSingleTemplate(fmt.Sprint(testFiles, "/", templateFile), testOutput, fmt.Sprint(testFiles, "/", varFile))
+			err := ParseSingleTemplate(templateFilePath, outputFilePath, varFilePath)
+			Expect(err).ToNot(HaveOccurred())
 
-			content, err := ioutil.ReadFile(fmt.Sprint(testOutput, "/", templateFile))
+			content, err := ioutil.ReadFile(outputFilePath)
 			if err != nil {
 				Fail(err.Error())
 			}
@@ -274,7 +273,7 @@ var _ = Describe("Running vortex with valid parameters", func() {
 			expectedSubstring := "name: test-name"
 			Expect(string(content)).To(ContainSubstring(expectedSubstring))
 
-			os.RemoveAll(testOutput)
+			os.RemoveAll(outputFilePath)
 		})
 	})
 
