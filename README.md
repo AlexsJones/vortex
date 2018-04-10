@@ -10,6 +10,8 @@
 
 ---
 
+[![Build Status](https://travis-ci.org/AlexsJones/vortex.svg?branch=master)](https://travis-ci.org/AlexsJones/vortex)
+
 A simple template reader and variable injector
 
 - Used for when you have a bunch of templates (e.g. kubernetes files) and want to inject a yaml file of variables
