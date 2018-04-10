@@ -82,13 +82,23 @@ func InputFilesAreValid(template string, varFile string) (bool, error) {
 			return false, nil
 		}
 
-		templates, err := ioutil.ReadDir(template)
+		var templates []string
+
+		err := filepath.Walk(template, func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() {
+				return nil
+			}
+
+			templates = append(templates, path)
+			return nil
+		})
+
 		if err != nil {
 			return false, err
 		}
 
 		for _, t := range templates {
-			isValid, err := templateFileIsValid(fmt.Sprintf("%s/%s", template, t.Name()))
+			isValid, err := templateFileIsValid(t)
 			if err != nil {
 				return false, err
 			}
@@ -97,7 +107,7 @@ func InputFilesAreValid(template string, varFile string) (bool, error) {
 				return false, nil
 			}
 
-			isValid, err = varFileHasExpectedVariables(fmt.Sprintf("%s/%s", template, t.Name()), varFile)
+			isValid, err = varFileHasExpectedVariables(t, varFile)
 			if err != nil {
 				return false, err
 			}

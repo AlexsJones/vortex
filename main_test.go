@@ -33,6 +33,61 @@ var _ = Describe("Running vortex with invalid parameters", func() {
 })
 
 var _ = Describe("Running the vortex validator", func() {
+	Context("With nested subdirectories of containing an invalid template", func() {
+		It("Should fail validation", func() {
+			validTemplate := []byte(`apiVersion: v1
+kind: Pod
+metadata:
+ name: {{.name}}
+spec:
+ restartPolicy: Always
+ containers:
+   - name: test
+     image: {{.image}}
+`)
+
+			invalidTemplate := []byte(`apiVersion: v1
+kind: Pod
+metadata:
+ name: {{.name}}
+spec:
+ restartPolicy: Always
+ containers:
+   - name: test
+     image: {{.anotherimage}}
+`)
+
+			vars := []byte(`name: some-name
+image: some-image
+`)
+
+			err := os.MkdirAll("tmp/one", 0700)
+			Expect(err).ToNot(HaveOccurred())
+			err = os.MkdirAll("tmp/two", 0700)
+			Expect(err).ToNot(HaveOccurred())
+
+			template1 := "tmp/one/template1.yaml"
+			template2 := "tmp/two/template2.yaml"
+			varFile := "vars.yaml"
+
+			err = ioutil.WriteFile(template1, validTemplate, 0700)
+			Expect(err).ToNot(HaveOccurred())
+			err = ioutil.WriteFile(template2, invalidTemplate, 0700)
+			Expect(err).ToNot(HaveOccurred())
+			err = ioutil.WriteFile(varFile, vars, 0700)
+			Expect(err).ToNot(HaveOccurred())
+
+			areValid, err := InputFilesAreValid("tmp", varFile)
+			Expect(areValid).To(BeFalse())
+			Expect(err).ToNot(HaveOccurred())
+
+			os.RemoveAll("tmp/one")
+			os.RemoveAll("tmp/two")
+			os.RemoveAll("tmp")
+			os.Remove("vars.yaml")
+		})
+	})
+
 	Context("With a preamble comment in the yaml template", func() {
 		It("Should pass validation", func() {
 			template := []byte(`{{.templatepreamble}}
