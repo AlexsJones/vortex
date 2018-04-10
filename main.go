@@ -13,9 +13,10 @@ import (
 
 	"path/filepath"
 
-	"gopkg.in/yaml.v2"
 	"regexp"
 	"strings"
+
+	"gopkg.in/yaml.v2"
 )
 
 /*********************************************************************************
