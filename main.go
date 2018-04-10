@@ -165,7 +165,7 @@ func templateFileIsValid(templateFile string) (bool, error) {
 	}
 
 	r := regexp.MustCompile(`{{\s{0,1}\..*\s{0,1}}}`)
-	bytes = r.ReplaceAll(bytes, []byte("placeholder"))
+	bytes = r.ReplaceAll(bytes, []byte("# placeholder"))
 
 	m := make(map[string]interface{})
 	err = yaml.Unmarshal(bytes, m)

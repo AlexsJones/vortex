@@ -33,6 +33,43 @@ var _ = Describe("Running vortex with invalid parameters", func() {
 })
 
 var _ = Describe("Running the vortex validator", func() {
+	Context("With a preamble comment in the yaml template", func() {
+		It("Should pass validation", func() {
+			template := []byte(`{{.templatepreamble}}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{.name}}
+spec:
+  restartPolicy: Always
+  containers:
+    - name: test
+      image: {{.image}}
+`)
+
+			vars := []byte(`name: some-name
+image: some-image
+templatepreamble: # some preamble
+`)
+
+			err := os.Mkdir("tmp", 0700)
+			Expect(err).ToNot(HaveOccurred())
+			err = ioutil.WriteFile("tmp/template.yaml", template, 0700)
+			Expect(err).ToNot(HaveOccurred())
+			err = ioutil.WriteFile("tmp/vars.yaml", vars, 0700)
+			Expect(err).ToNot(HaveOccurred())
+
+			templateFile := "tmp/template.yaml"
+			varsFile := "tmp/vars.yaml"
+
+			areValid, err := InputFilesAreValid(templateFile, varsFile)
+			Expect(areValid).To(BeTrue())
+			Expect(err).ToNot(HaveOccurred())
+
+			os.RemoveAll("tmp")
+		})
+	})
+
 	Context("With invalid syntax in a variables file", func() {
 		It("Should fail validation", func() {
 			templateFile := "test_files/test1.yaml"
