@@ -11,6 +11,7 @@ go:
   - "1.10"
 
 install:
+  - go get github.com/onsi/ginkgo
   - go get -v ./...
 
 script:
