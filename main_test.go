@@ -25,13 +25,22 @@ const (
 )
 
 var (
-	directoryValidTemplatePaths       = []string{"templates/template1.yaml", "templates/template2.yaml"}
-	directoryInvalidTemplatePaths     = []string{"templates/template3.yaml"}
+	directoryValidTemplatePaths   = []string{"templates/template1.yaml", "templates/template2.yaml"}
+	directoryInvalidTemplatePaths = []string{"templates/template3.yaml"}
 
 	directoryTreePaths                = []string{"templates/one", "templates/two"}
 	directoryTreeValidTemplatePaths   = []string{"templates/one/template1.yaml", "templates/two/template2.yaml"}
 	directoryTreeInvalidTemplatePaths = []string{"templates/template3.yaml"}
 )
+
+type ValidationFeature struct {
+	isValid         bool
+	validTemplate   []byte
+	invalidTemplate []byte
+	validVars       []byte
+	invalidVars     []byte
+	missingVars     []byte
+}
 
 func (v *ValidationFeature) generateTemplates(validity, inputType string) error {
 	switch inputType {
@@ -135,15 +144,6 @@ func (v *ValidationFeature) checkValidationResult(expected string) error {
 			return nil
 		}
 	}
-}
-
-type ValidationFeature struct {
-	isValid         bool
-	validTemplate   []byte
-	invalidTemplate []byte
-	validVars       []byte
-	invalidVars     []byte
-	missingVars     []byte
 }
 
 func (v *ValidationFeature) generateVarTemplatePairs(variables, input string) error {
