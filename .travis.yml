@@ -20,4 +20,4 @@ install:
 
 script:
   - go vet -v $(go list ./... | grep -v /vendor/)
-  - go test -v -cover $(go list ./... | grep -v /vendor/)
+  - godog
