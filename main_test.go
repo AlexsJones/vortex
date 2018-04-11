@@ -1,333 +1,202 @@
-package main_test
+package main
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
 	"fmt"
+	"github.com/DATA-DOG/godog"
 	"io/ioutil"
+	"log"
 	"os"
-
-	. "github.com/AlexsJones/vortex"
+	"strings"
 )
 
-var _ = Describe("Running vortex with invalid parameters", func() {
-	templateFile := "test_files/test1.yaml"
-	invalidFile := "not-a-file"
-	varsFile := "test_files/vars.yaml"
-	testOutputDir := "this-dir-doesnt-exist"
+const (
+	TEMPLATE_FILE = "template.yaml"
+	TEMPLATE_DIR  = "templates"
+	VARS_FILE     = "vars.yaml"
 
-	Context("Without a template file", func() {
-		It("Should throw an error", func() {
-			err := InputParametersCheck(&invalidFile, &testOutputDir, &varsFile)
-			Expect(err).To(HaveOccurred())
-		})
-	})
+	TEMPLATE       = "template"
+	DIRECTORY      = "directory"
+	DIRECTORY_TREE = "directory tree"
+	VALID          = "valid"
+	INVALID        = "invalid"
+	MIXED          = "mixed"
+	CONTAINS       = "contains"
+	SUCCESSFUL     = "successful"
+)
 
-	Context("Without a variable file", func() {
-		It("Should throw an error", func() {
-			err := InputParametersCheck(&templateFile, &testOutputDir, &invalidFile)
-			Expect(err).To(HaveOccurred())
-		})
-	})
-})
+var (
+	directoryValidTemplatePaths   = []string{"templates/template1.yaml", "templates/template2.yaml"}
+	directoryInvalidTemplatePaths = []string{"templates/template3.yaml"}
 
-var _ = Describe("Running the vortex validator", func() {
-	Context("With non-yaml files in a directory containing yaml template files", func() {
-		It("Should only try to validate yaml files", func() {
-			template := []byte(`a: {{.var}}`)
-			vars := []byte(`var: some-var`)
-			readme := []byte(`SOME MARKDOWN HERE * * VERY NICE * *`)
+	directoryTreePaths                = []string{"templates/one", "templates/two"}
+	directoryTreeValidTemplatePaths   = []string{"templates/one/template1.yaml", "templates/two/template2.yaml"}
+	directoryTreeInvalidTemplatePaths = []string{"templates/template3.yaml"}
+)
 
-			err := os.MkdirAll("tmp", 0700)
-			Expect(err).ToNot(HaveOccurred())
-			err = ioutil.WriteFile("tmp/README.md", readme, 0700)
-			Expect(err).ToNot(HaveOccurred())
-			err = ioutil.WriteFile("tmp/template.yaml", template, 0700)
-			Expect(err).ToNot(HaveOccurred())
-			err = ioutil.WriteFile("vars.yaml", vars, 0700)
-			Expect(err).ToNot(HaveOccurred())
+type ValidationFeature struct {
+	isValid         bool
+	validTemplate   []byte
+	invalidTemplate []byte
+	validVars       []byte
+	invalidVars     []byte
+	missingVars     []byte
+}
 
-			areValid, err := InputFilesAreValid("tmp", "vars.yaml")
-			Expect(areValid).To(BeTrue())
-			Expect(err).ToNot(HaveOccurred())
-
-			os.RemoveAll("tmp")
-			os.RemoveAll("vars.yaml")
-		})
-	})
-
-	Context("With nested subdirectories of containing an invalid template", func() {
-		It("Should fail validation", func() {
-			validTemplate := []byte(`apiVersion: v1
-kind: Pod
-metadata:
- name: {{.name}}
-spec:
- restartPolicy: Always
- containers:
-   - name: test
-     image: {{.image}}
-`)
-
-			invalidTemplate := []byte(`apiVersion: v1
-kind: Pod
-metadata:
- name: {{.name}}
-spec:
- restartPolicy: Always
- containers:
-   - name: test
-     image: {{.anotherimage}}
-`)
-
-			vars := []byte(`name: some-name
-image: some-image
-`)
-
-			err := os.MkdirAll("tmp/one", 0700)
-			Expect(err).ToNot(HaveOccurred())
-			err = os.MkdirAll("tmp/two", 0700)
-			Expect(err).ToNot(HaveOccurred())
-
-			template1 := "tmp/one/template1.yaml"
-			template2 := "tmp/two/template2.yaml"
-			varFile := "vars.yaml"
-
-			err = ioutil.WriteFile(template1, validTemplate, 0700)
-			Expect(err).ToNot(HaveOccurred())
-			err = ioutil.WriteFile(template2, invalidTemplate, 0700)
-			Expect(err).ToNot(HaveOccurred())
-			err = ioutil.WriteFile(varFile, vars, 0700)
-			Expect(err).ToNot(HaveOccurred())
-
-			areValid, err := InputFilesAreValid("tmp", varFile)
-			Expect(areValid).To(BeFalse())
-			Expect(err).ToNot(HaveOccurred())
-
-			os.RemoveAll("tmp/one")
-			os.RemoveAll("tmp/two")
-			os.RemoveAll("tmp")
-			os.Remove("vars.yaml")
-		})
-	})
-
-	Context("With a preamble comment in the yaml template", func() {
-		It("Should pass validation", func() {
-			template := []byte(`{{.templatepreamble}}
-apiVersion: v1
-kind: Pod
-metadata:
-  name: {{.name}}
-spec:
-  restartPolicy: Always
-  containers:
-    - name: test
-      image: {{.image}}
-`)
-
-			vars := []byte(`name: some-name
-image: some-image
-templatepreamble: # some preamble
-`)
-
-			err := os.Mkdir("tmp", 0700)
-			Expect(err).ToNot(HaveOccurred())
-			err = ioutil.WriteFile("tmp/template.yaml", template, 0700)
-			Expect(err).ToNot(HaveOccurred())
-			err = ioutil.WriteFile("tmp/vars.yaml", vars, 0700)
-			Expect(err).ToNot(HaveOccurred())
-
-			templateFile := "tmp/template.yaml"
-			varsFile := "tmp/vars.yaml"
-
-			areValid, err := InputFilesAreValid(templateFile, varsFile)
-			Expect(areValid).To(BeTrue())
-			Expect(err).ToNot(HaveOccurred())
-
-			os.RemoveAll("tmp")
-		})
-	})
-
-	Context("With invalid syntax in a variables file", func() {
-		It("Should fail validation", func() {
-			templateFile := "test_files/test1.yaml"
-			varsFile := "test_files/badvars.yaml"
-			areValid, err := InputFilesAreValid(templateFile, varsFile)
-			Expect(areValid).To(BeFalse())
-			Expect(err).To(HaveOccurred())
-		})
-	})
-
-	Context("With {{.var}} syntax in a template file", func() {
-		It("Should pass validation", func() {
-			templateFile := "test_files/test1.yaml"
-			varsFile := "test_files/vars.yaml"
-			areValid, err := InputFilesAreValid(templateFile, varsFile)
-			Expect(areValid).To(BeTrue())
-			Expect(err).ToNot(HaveOccurred())
-		})
-	})
-
-	Context("With invalid syntax in a template file", func() {
-		It("Should fail validation", func() {
-			templateFile := "test_files/badtemplate.yaml"
-			varsFile := "test_files/vars.yaml"
-			areValid, err := InputFilesAreValid(templateFile, varsFile)
-			Expect(areValid).To(BeFalse())
-			Expect(err).To(HaveOccurred())
-		})
-	})
-
-	Context("With valid template and var files with fully corresponding variables", func() {
-		It("Should pass validation", func() {
-			templateFile := "test_files/test2.yaml"
-			varsFile := "test_files/vars.yaml"
-			areValid, err := InputFilesAreValid(templateFile, varsFile)
-			Expect(areValid).To(BeTrue())
-			Expect(err).ToNot(HaveOccurred())
-		})
-	})
-
-	Context("With a templated variable that doesn't exist in the given var file", func() {
-		It("Should fail validation", func() {
-			templateFile := "test_files/test3.yaml"
-			varsFile := "test_files/vars.yaml"
-			areValid, err := InputFilesAreValid(templateFile, varsFile)
-			Expect(areValid).To(BeFalse())
-			Expect(err).ToNot(HaveOccurred())
-		})
-	})
-
-	Context("With a directory of valid templates and a valid var file with fully corresponding variables", func() {
-		It("Should pass validation", func() {
-			templateDir := "tmp1"
-			varFileDir := "tmp2"
-			validTemplate := []byte(`apiVersion: v1
-kind: Pod
-metadata:
-  name: {{.name}}
-spec:
-  restartPolicy: Always
-  containers:
-    - name: test
-      image: {{.image}}
-`)
-
-			validVarFile := []byte(`name: some-name
-image: some-image
-`)
-			err := os.Mkdir(templateDir, 0700)
-			Expect(err).ToNot(HaveOccurred())
-			err = os.Mkdir(varFileDir, 0700)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = ioutil.WriteFile("tmp1/template1.yaml", validTemplate, 0644)
-			Expect(err).ToNot(HaveOccurred())
-			err = ioutil.WriteFile("tmp1/template2.yaml", validTemplate, 0644)
-			Expect(err).ToNot(HaveOccurred())
-			err = ioutil.WriteFile("tmp2/vars.yaml", validVarFile, 0644)
-			Expect(err).ToNot(HaveOccurred())
-
-			areValid, err := InputFilesAreValid(templateDir, "tmp2/vars.yaml")
-			Expect(areValid).To(BeTrue())
-			Expect(err).ToNot(HaveOccurred())
-
-			os.RemoveAll(varFileDir)
-			os.RemoveAll(templateDir)
-		})
-	})
-})
-
-var _ = Describe("Running vortex with valid parameters", func() {
-	Context("With an output directory that doesn't exist", func() {
-		It("Should create the output directory", func() {
-			templateFile := "test_files/test1.yaml"
-			varsFile := "test_files/vars.yaml"
-			testOutputDir := "this-dir-doesnt-exist"
-			err := InputParametersCheck(&templateFile, &testOutputDir, &varsFile)
-			if err != nil {
-				Fail(err.Error())
+func (v *ValidationFeature) generateTemplates(validity, inputType string) error {
+	switch inputType {
+	case TEMPLATE:
+		switch validity {
+		case VALID:
+			if err := ioutil.WriteFile(TEMPLATE_FILE, v.validTemplate, os.ModePerm); err != nil {
+				return err
 			}
+		case INVALID:
+			if err := ioutil.WriteFile(TEMPLATE_FILE, v.invalidTemplate, os.ModePerm); err != nil {
+				return err
+			}
+		}
+	case DIRECTORY:
+		if err := os.MkdirAll(TEMPLATE_DIR, os.ModePerm); err != nil {
+			return err
+		}
 
-			Expect(testOutputDir).To(BeADirectory())
+		for _, validTemplate := range directoryValidTemplatePaths {
+			if err := ioutil.WriteFile(validTemplate, v.validTemplate, os.ModePerm); err != nil {
+				return err
+			}
+		}
 
-			os.RemoveAll(testOutputDir)
-		})
+		if validity == MIXED {
+			for _, invalidTemplate := range directoryInvalidTemplatePaths {
+				if err := ioutil.WriteFile(invalidTemplate, v.invalidTemplate, os.ModePerm); err != nil {
+					return err
+				}
+			}
+		}
+	case DIRECTORY_TREE:
+		for _, dir := range directoryTreePaths {
+			if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+				return err
+			}
+		}
+
+		for _, validTemplate := range directoryTreeValidTemplatePaths {
+			if err := ioutil.WriteFile(validTemplate, v.validTemplate, os.ModePerm); err != nil {
+				return err
+			}
+		}
+
+		if validity == MIXED {
+			for _, invalidTemplate := range directoryTreeInvalidTemplatePaths {
+				if err := ioutil.WriteFile(invalidTemplate, v.invalidTemplate, os.ModePerm); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func (v *ValidationFeature) generateVarsFile(validity string) error {
+	if validity == VALID {
+		if err := ioutil.WriteFile(VARS_FILE, v.validVars, os.ModePerm); err != nil {
+			return err
+		}
+	} else {
+		if err := ioutil.WriteFile(VARS_FILE, v.invalidVars, os.ModePerm); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (v *ValidationFeature) validate(input string) error {
+	var templateArg string
+
+	if strings.Contains(input, DIRECTORY) {
+		templateArg = TEMPLATE_DIR
+	} else {
+		templateArg = TEMPLATE_FILE
+	}
+
+	areValid, _ := InputFilesAreValid(templateArg, VARS_FILE)
+
+	if !areValid {
+		v.isValid = false
+	}
+
+	return nil
+}
+
+func (v *ValidationFeature) checkValidationResult(expected string) error {
+	if expected == SUCCESSFUL {
+		if v.isValid {
+			return nil
+		} else {
+			return fmt.Errorf("should have been valid")
+		}
+	} else {
+		if v.isValid {
+			return fmt.Errorf("should not have been valid")
+		} else {
+			return nil
+		}
+	}
+}
+
+func (v *ValidationFeature) generateVarTemplatePairs(variables, input string) error {
+	if variables == CONTAINS {
+		if err := ioutil.WriteFile(VARS_FILE, v.validVars, os.ModePerm); err != nil {
+			return err
+		}
+	} else {
+		if err := ioutil.WriteFile(VARS_FILE, v.missingVars, os.ModePerm); err != nil {
+			return err
+		}
+	}
+
+	switch input {
+	case DIRECTORY_TREE:
+		v.generateTemplates(VALID, DIRECTORY)
+	case DIRECTORY:
+		v.generateTemplates(VALID, DIRECTORY_TREE)
+	case TEMPLATE:
+		v.generateTemplates(VALID, TEMPLATE)
+	}
+	return nil
+}
+
+func FeatureContext(s *godog.Suite) {
+	v := &ValidationFeature{
+		isValid:         true,
+		validTemplate:   []byte("valid: {{.template}}"),
+		invalidTemplate: []byte("invalid; {{.template}}"),
+		validVars:       []byte("template: valid"),
+		invalidVars:     []byte("template; invalid"),
+		missingVars:     []byte("not-template: something else"),
+	}
+
+	s.Step(`^an? (valid|invalid|mixed) (template|directory|directory tree)$`, v.generateTemplates)
+	s.Step(`^an? (valid|invalid) vars.yaml file$`, v.generateVarsFile)
+	s.Step(`^vortex is run with the -validate flag for a (template|directory|directory tree)$`, v.validate)
+	s.Step(`^validation should be (successful|unsuccessful)$`, v.checkValidationResult)
+	s.Step(`^a vars.yaml that (contains|doesn't contain) all expected variables for a (template|directory|directory tree)$`, v.generateVarTemplatePairs)
+
+	s.BeforeScenario(func(interface{}) {
+		os.RemoveAll(TEMPLATE_DIR)
+		log.SetOutput(ioutil.Discard)
+		v.isValid = true
 	})
 
-	Context("With a template file, a variable file and an output path", func() {
-		It("It should output the rendered template at the output path", func() {
-			templateFilePath := "test_files/test1.yaml"
-			varFilePath := "test_files/vars.yaml"
-			outputFilePath := "test_output.yaml"
+	s.AfterScenario(func(interface{}, error) {
+		filesToCleanup := []string{TEMPLATE_FILE, VARS_FILE}
 
-			err := ParseSingleTemplate(templateFilePath, outputFilePath, varFilePath)
-			Expect(err).ToNot(HaveOccurred())
+		for _, file := range filesToCleanup {
+			os.Remove(file)
+		}
 
-			content, err := ioutil.ReadFile(outputFilePath)
-			if err != nil {
-				Fail(err.Error())
-			}
-
-			expectedSubstring := "name: test-name"
-			Expect(string(content)).To(ContainSubstring(expectedSubstring))
-
-			os.RemoveAll(outputFilePath)
-		})
+		os.RemoveAll(TEMPLATE_DIR)
 	})
-
-	Context("With a template directory, a variable file and an output directory", func() {
-		It("It should output the rendered templates in the output directory", func() {
-			testFiles := "test_files"
-			templateFiles := []string{"test1.yaml", "test2.yaml"}
-
-			varFile := "vars.yaml"
-			testOutput := "test_output"
-			os.MkdirAll(testOutput, 0700)
-
-			ParseDirectoryTemplates(testFiles, testOutput, fmt.Sprint(testFiles, "/", varFile))
-
-			content1, err := ioutil.ReadFile(fmt.Sprint(testOutput, "/", templateFiles[0]))
-			if err != nil {
-				Fail(err.Error())
-			}
-
-			expectedSubstring1 := "name: test-name"
-			Expect(string(content1)).To(ContainSubstring(expectedSubstring1))
-
-			content2, err := ioutil.ReadFile(fmt.Sprint(testOutput, "/", templateFiles[1]))
-			if err != nil {
-				Fail(err.Error())
-			}
-
-			expectedSubstring2 := "image: image-test"
-			Expect(string(content2)).To(ContainSubstring(expectedSubstring2))
-
-			os.RemoveAll(testOutput)
-		})
-	})
-
-	Context("With a template directory, a variable file and an output directory", func() {
-		It("It should ignore nested subdirectories in the template directory", func() {
-			// Setup
-			testFiles := "test_files"
-
-			varFile := "vars.yaml"
-			testOutput := "test_output"
-			subdirectoryToIgnore := "sub_directory"
-			os.MkdirAll(testOutput, 0700)
-
-			// When
-			ParseDirectoryTemplates(testFiles, testOutput, fmt.Sprint(testFiles, "/", varFile))
-
-			// Then
-			if _, err := os.Stat(fmt.Sprint(testOutput, "/", subdirectoryToIgnore)); os.IsNotExist(err) {
-				os.RemoveAll(testOutput)
-				return
-			} else {
-				Fail("Subdirectory was not ignored")
-			}
-		})
-	})
-})
+}
