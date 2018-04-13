@@ -17,6 +17,10 @@ type Vortex struct {
 	variables map[string]interface{}
 }
 
+func New() *Vortex {
+	return &Vortex{}
+}
+
 // LoadVariables will read from a file path and load Vortex with the variables ready
 func (v *Vortex) LoadVariables(filepath string) error {
 	if _, err := os.Stat(filepath); os.IsNotExist(err) {
@@ -55,7 +59,7 @@ func (v *Vortex) ProcessTemplates(templateroot, outputroot string) error {
 			}
 		default:
 			// If the file extension doesn't match what we expect then ignore it
-			if !regexp.MustCompile("$[a-zA-Z0-9]+\\.ya?ml^").MatchString(file.Name()) {
+			if !regexp.MustCompile(`$[_\-a-zA-Z0-9]+\\.ya?ml^`).MatchString(file.Name()) {
 				continue
 			}
 			if err = v.processTemplate(readpath, outputroot); err != nil {
