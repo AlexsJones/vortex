@@ -1,5 +1,5 @@
 ```
-   :::     :::  ::::::::  ::::::::: ::::::::::: :::::::::: :::    ::: 
+   :::     :::  ::::::::  ::::::::: ::::::::::: :::::::::: :::    :::
   :+:     :+: :+:    :+: :+:    :+:    :+:     :+:        :+:    :+:  
  +:+     +:+ +:+    +:+ +:+    +:+    +:+     +:+         +:+  +:+    
 +#+     +:+ +#+    +:+ +#++:++#:     +#+     +#++:++#     +#++:+      
@@ -11,13 +11,12 @@
 ---
 
 [![Build Status](https://travis-ci.org/AlexsJones/vortex.svg?branch=master)](https://travis-ci.org/AlexsJones/vortex)
+[![Maintainability](https://api.codeclimate.com/v1/badges/93b3be49a1b077adc0ba/maintainability)](https://codeclimate.com/github/AlexsJones/vortex/maintainability)
 
 A simple template reader and variable injector
 
 - Used for when you have a bunch of templates (e.g. kubernetes files) and want to inject a yaml file of variables
-- Annoyingly finding something simple like vortex is hard because everything out there seems to be overcomplicated. This may as well be a little script :shrug:
-
-
+- Supports giving it a directory of nested templates and an output path (it will reproduce the directory structure)
 ## Example
 
 demo.tmpl
@@ -41,7 +40,7 @@ image: "us.gcr.io/test"
 
 ```
 
-The result; 
+The result;
 ```
 apiVersion: v1
 kind: Pod
@@ -60,39 +59,24 @@ vortex -template example/demo.tmpl -output test.txt -varpath example/vars.yaml
 
 ```
 
-## Scripting
+## Recursive folder templating
 
-With the following setup it is very trivial to script a simple way of parsing many templates
+Vortex also can recursively follow a template folder
+
+e.g.
 ```
-environments/
-           production.yaml
-templates/
-          api/
-             kubernetes-deployment.yaml
-          web/
-             service.yaml
-deployment/
-```
+somefolders/
+            foo/
+                template.yaml
+            bar/
+                another.yaml
 
 ```
-rm -rf deployment || true
-
-for d in ./templates/**/*; do
-    filename=$(dirname $d)
-    foldername=`echo basename $filename`
-    folderaltered=$(echo $foldername | sed 's/templates/deployment/g')
-    echo "Creating $folderaltered"
-    mkdir -p deployment/$folderaltered
-
-   newpath=$(echo $d | sed 's/templates/deployment/g')
-
-   vortex --template $d --output $newpath -varpath ./environments/$1.yaml
-done
 
 ```
+vortex -template somefolders -output anoutputfolder -var example/vars.yaml
 ```
-./script.sh production
-```
+
 
 ### Other examples
 ```
