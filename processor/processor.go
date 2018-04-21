@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"text/template"
 
-	yaml "gopkg.in/yaml.v2"
+	"github.com/AlexsJones/vortex/utils"
 )
 
 // Vortex container of information that are awesome and amazing
@@ -23,14 +23,9 @@ func New() *Vortex {
 
 // LoadVariables will read from a file path and load Vortex with the variables ready
 func (v *Vortex) LoadVariables(filepath string) error {
-	if _, err := os.Stat(filepath); os.IsNotExist(err) {
-		return fmt.Errorf("%v is not a valid path", filepath)
-	}
-	buff, err := ioutil.ReadFile(filepath)
-	if err != nil {
-		return err
-	}
-	return yaml.Unmarshal(buff, &(v.variables))
+	content, err := utils.ProgramaticMarshall(filepath)
+	v.variables = content
+	return err
 }
 
 // ProcessTemplates applys a DFS over the templateroot and will process the
