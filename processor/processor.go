@@ -38,12 +38,14 @@ func (v *Vortex) ProcessTemplates(templateroot, outputroot string) error {
 		return fmt.Errorf("%v does not exist", templateroot)
 	}
 	if !root.IsDir() {
+		fmt.Println("Single file process")
 		return v.processTemplate(templateroot, outputroot)
 	}
 	files, err := ioutil.ReadDir(templateroot)
 	if err != nil {
 		return err
 	}
+	fmt.Println("Reading entire directory")
 	for _, file := range files {
 		readpath := path.Join(outputroot, file.Name())
 		switch {
@@ -66,13 +68,17 @@ func (v *Vortex) ProcessTemplates(templateroot, outputroot string) error {
 }
 
 func (v *Vortex) processTemplate(templatepath, outputpath string) error {
+	fmt.Println("Template path:", templatepath)
+	fmt.Println("Output path:", outputpath)
+	fmt.Println("Output base name:", path.Base(templatepath))
 	// if the folder path doesn't exist, then we need to make it
 	if _, err := os.Stat(path.Dir(outputpath)); os.IsNotExist(err) {
-		if err = os.MkdirAll(path.Dir(outputpath), 0755); err != nil {
+		if err = os.MkdirAll(outputpath, 0755); err != nil {
 			return err
 		}
+		fmt.Println("Creating:", path.Dir(outputpath))
 	}
-	if _, err := os.Stat(outputpath); !os.IsNotExist(err) {
+	if f, err := os.Stat(outputpath); !os.IsNotExist(err) && !f.IsDir() {
 		return fmt.Errorf("%v already exists, needs to be removed in order to process", outputpath)
 	}
 	buff, err := ioutil.ReadFile(templatepath)
@@ -87,5 +93,6 @@ func (v *Vortex) processTemplate(templatepath, outputpath string) error {
 	if err = tmpl.Execute(writer, v.variables); err != nil {
 		return err
 	}
+	fmt.Println("Do I make it this far?	")
 	return ioutil.WriteFile(path.Join(outputpath, path.Base(templatepath)), writer.Bytes(), 0644)
 }

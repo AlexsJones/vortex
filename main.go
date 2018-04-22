@@ -69,7 +69,7 @@ func main() {
 			vortex = processor.New()
 		}
 	default:
-		fmt.Println("vortex is a simple program to combine a template with a yaml file of defined varibles it uses golang {{.var}} format with standard yaml")
+		fmt.Println(usage)
 		flag.Usage()
 		return
 	}
