@@ -9,23 +9,23 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/AlexsJones/vortex/utils"
+	"github.com/AlexsJones/vortex/abstraction"
 )
 
 // Vortex container of information that are awesome and amazing
 type Vortex struct {
-	variables map[string]interface{}
+	*abstraction.Base
 }
 
 func New() *Vortex {
-	return &Vortex{}
+	return &Vortex{
+		Base: abstraction.New(),
+	}
 }
 
 // LoadVariables will read from a file path and load Vortex with the variables ready
 func (v *Vortex) LoadVariables(filepath string) error {
-	content, err := utils.ProgramaticMarshall(filepath)
-	v.variables = content
-	return err
+	return v.Base.LoadVariables(filepath)
 }
 
 // ProcessTemplates applys a DFS over the templateroot and will process the
@@ -84,7 +84,7 @@ func (v *Vortex) processTemplate(templatepath, outputpath string) error {
 		return err
 	}
 	writer := bytes.NewBuffer(nil)
-	if err = tmpl.Execute(writer, v.variables); err != nil {
+	if err = tmpl.Execute(writer, v.Base.Variables); err != nil {
 		return err
 	}
 	return ioutil.WriteFile(path.Join(outputpath, path.Base(templatepath)), writer.Bytes(), 0644)

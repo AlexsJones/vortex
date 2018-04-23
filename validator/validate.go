@@ -1,19 +1,21 @@
 package validator
 
-import "github.com/AlexsJones/vortex/utils"
+import (
+	"github.com/AlexsJones/vortex/abstraction"
+)
 
 type Validator struct {
-	variables map[string]interface{}
+	*abstraction.Base
 }
 
 func New() *Validator {
-	return &Validator{}
+	return &Validator{
+		Base: abstraction.New(),
+	}
 }
 
 func (v *Validator) LoadVariables(variablepath string) error {
-	content, err := utils.ProgramaticMarshall(variablepath)
-	v.variables = content
-	return err
+	return v.Base.LoadVariables(variablepath)
 }
 
 func (v *Validator) ProcessTemplates(templatePath, outputPath string) error {
