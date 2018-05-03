@@ -89,7 +89,7 @@ func (v *Vortex) processTemplate(templatepath, outputpath string) error {
 	if err != nil {
 		return err
 	}
-	tmpl, err := template.New("templated_var").Parse(string(buff))
+	tmpl, err := template.New(path.Base(templatepath)).Parse(string(buff))
 	if err != nil {
 		return err
 	}
