@@ -6,9 +6,7 @@ import (
 
 	"os"
 
-	"github.com/AlexsJones/vortex/abstraction"
 	"github.com/AlexsJones/vortex/processor"
-	"github.com/AlexsJones/vortex/validator"
 )
 
 /*********************************************************************************
@@ -48,14 +46,12 @@ func init() {
 func main() {
 	flag.Parse()
 	var (
-		vortex abstraction.TemplateProcessor
+		vortex = processor.New()
 	)
 	switch {
 	case variablePath != "" && templatePath != "":
 		if validate {
-			vortex = validator.New()
-		} else {
-			vortex = processor.New()
+			vortex.EnableStrict()
 		}
 	default:
 		fmt.Println(usage)

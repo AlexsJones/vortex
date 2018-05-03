@@ -9,23 +9,33 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/AlexsJones/vortex/abstraction"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // Vortex container of information that are awesome and amazing
 type Vortex struct {
-	*abstraction.Base
+	variables map[string]interface{}
+	strict    bool
 }
 
 func New() *Vortex {
-	return &Vortex{
-		Base: abstraction.New(),
-	}
+	return &Vortex{}
 }
 
 // LoadVariables will read from a file path and load Vortex with the variables ready
-func (v *Vortex) LoadVariables(filepath string) error {
-	return v.Base.LoadVariables(filepath)
+func (v *Vortex) LoadVariables(variablepath string) error {
+	if _, err := os.Stat(variablepath); os.IsNotExist(err) {
+		return fmt.Errorf("%v is not a valid path", variablepath)
+	}
+	buff, err := ioutil.ReadFile(variablepath)
+	if err != nil {
+		return err
+	}
+	return yaml.Unmarshal(buff, &(v.variables))
+}
+
+func (v *Vortex) EnableStrict() {
+	v.strict = true
 }
 
 // ProcessTemplates applys a DFS over the templateroot and will process the
@@ -83,8 +93,11 @@ func (v *Vortex) processTemplate(templatepath, outputpath string) error {
 	if err != nil {
 		return err
 	}
+	if v.strict {
+		tmpl = tmpl.Option("missingkey=error")
+	}
 	writer := bytes.NewBuffer(nil)
-	if err = tmpl.Execute(writer, v.Base.Variables); err != nil {
+	if err = tmpl.Execute(writer, v.variables); err != nil {
 		return err
 	}
 	return ioutil.WriteFile(path.Join(outputpath, path.Base(templatepath)), writer.Bytes(), 0644)

@@ -13,4 +13,7 @@ type TemplateProcessor interface {
 	// templatePath (and all subsequent directories) and output them
 	// into the relative output path.
 	ProcessTemplates(templatePath, outputPath string) error
+
+	// EnableStrict will enforce that templates have all the required vars
+	EnableStrict()
 }
