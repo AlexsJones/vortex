@@ -15,14 +15,15 @@ import (
 *     Creation Date       :     [2017-09-26 18:35]
 **********************************************************************************/
 const (
-	usage string = `
-Vortex -- a simplified template parser
+	usage string = `%s -- a simplified template parser
 
 The desired usage is to read from a variables file (defined in yaml)
 and template in the variables into the given templates.
 Thus, the usage of the progam is:
 
-vortex --template path --varpath path [--validate] [--output path]
+%s --template path --varpath path [--validate] [--output path]
+
+The flags being used are:
 `
 )
 
@@ -41,6 +42,10 @@ func init() {
 	flag.StringVar(&variablePath, "varpath", blank, "path to var yaml to populate")
 	flag.StringVar(&outputPath, "output", blank, "Output path for the rendered templates to be outputted")
 	flag.BoolVar(&validate, "validate", false, "validate syntax and check for the required variables")
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, usage, os.Args[0], os.Args[0])
+		flag.PrintDefaults()
+	}
 }
 
 func main() {
