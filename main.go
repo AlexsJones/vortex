@@ -38,8 +38,8 @@ func init() {
 	const (
 		blank = ""
 	)
-	flag.StringVar(&templatePath, "template", blank, "path to template to use")
-	flag.StringVar(&variablePath, "varpath", blank, "path to var yaml to populate")
+	flag.StringVar(&templatePath, "template", blank, "path to the the directory or file to process")
+	flag.StringVar(&variablePath, "varpath", blank, "path to the variable config to use while processing")
 	flag.StringVar(&outputPath, "output", blank, "Output path for the rendered templates to be outputted")
 	flag.BoolVar(&validate, "validate", false, "validate syntax and check for the required variables")
 	flag.Usage = func() {
