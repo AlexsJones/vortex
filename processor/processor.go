@@ -100,5 +100,9 @@ func (v *Vortex) processTemplate(templatepath, outputpath string) error {
 	if err = tmpl.Execute(writer, v.variables); err != nil {
 		return err
 	}
-	return ioutil.WriteFile(path.Join(outputpath, path.Base(templatepath)), writer.Bytes(), 0644)
+	if !v.strict {
+		filename := path.Join(outputpath, path.Base(templatepath))
+		return ioutil.WriteFile(filename, writer.Bytes(), 0644)
+	}
+	return nil
 }
