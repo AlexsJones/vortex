@@ -56,11 +56,11 @@ func (v *Vortex) ProcessTemplates(templateroot, outputroot string) error {
 		return err
 	}
 	for _, file := range files {
-		readpath := path.Join(outputroot, file.Name())
+		readpath := path.Join(templateroot, file.Name())
 		switch {
 		case file.IsDir():
-			outputroot = path.Join(outputroot, file.Name())
-			if err := v.ProcessTemplates(readpath, outputroot); err != nil {
+			newroot := path.Join(outputroot, file.Name())
+			if err := v.ProcessTemplates(readpath, newroot); err != nil {
 				return err
 			}
 		default:

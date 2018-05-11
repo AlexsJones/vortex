@@ -1,6 +1,11 @@
 package main_test
 
 import (
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -49,7 +54,7 @@ var _ = Describe("Vortex validating templates", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})
-	Context("With a valid template with a invalid yaml definitions", func() {
+	Context("With a valid template that has a invalid yaml definitions", func() {
 		It("it should report an error", func() {
 			vort := processor.New()
 			if err := vort.LoadVariables(variablePath); err != nil {
@@ -57,6 +62,54 @@ var _ = Describe("Vortex validating templates", func() {
 			}
 			err := vort.EnableStrict().ProcessTemplates(badTemplate, "")
 			Expect(err).To(HaveOccurred())
+		})
+	})
+	Context("With a validate template but missing variables", func() {
+		It("Should report an error", func() {
+			vort := processor.New()
+			err := vort.EnableStrict().ProcessTemplates(badTemplate, "")
+			Expect(err).To(HaveOccurred())
+		})
+	})
+	Context("with a valid vars file and a directory to validate", func() {
+		It("should not report an error", func() {
+			var (
+				varPath     = "example/vars.vortex"
+				templateDir = "example"
+			)
+			vort := processor.New()
+			if err := vort.LoadVariables(varPath); err != nil {
+				Expect(err).NotTo(HaveOccurred())
+			}
+			err := vort.EnableStrict().ProcessTemplates(templateDir, "")
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+})
+
+var _ = Describe("Processing templates with vortex", func() {
+	Context("Using a single valid template file as the template path", func() {
+		It("should not report an error", func() {
+			var (
+				varPath     = "example/vars.vortex"
+				templateDir = "example"
+				vort        = processor.New()
+			)
+			dir, err := ioutil.TempDir("", "output")
+			Expect(err).NotTo(HaveOccurred())
+
+			defer os.RemoveAll(dir)
+			fmt.Println("The directories are:", dir)
+			err = vort.LoadVariables(varPath)
+			Expect(err).NotTo(HaveOccurred())
+			err = vort.ProcessTemplates(templateDir, dir)
+			Expect(err).NotTo(HaveOccurred())
+			if _, err = os.Stat(path.Join(dir, "demo.yaml")); os.IsNotExist(err) {
+				Expect(err).NotTo(HaveOccurred())
+			}
+			if _, err = os.Stat(path.Join(dir, "bar/example.yaml")); os.IsNotExist(err) {
+				Expect(err).NotTo(HaveOccurred())
+			}
 		})
 	})
 })
