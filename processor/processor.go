@@ -34,8 +34,9 @@ func (v *Vortex) LoadVariables(variablepath string) error {
 	return yaml.Unmarshal(buff, &(v.variables))
 }
 
-func (v *Vortex) EnableStrict() {
+func (v *Vortex) EnableStrict() *Vortex {
 	v.strict = true
+	return v
 }
 
 // ProcessTemplates applys a DFS over the templateroot and will process the
@@ -77,7 +78,7 @@ func (v *Vortex) processTemplate(templatepath, outputpath string) error {
 		return nil
 	}
 	// if the folder path doesn't exist, then we need to make it
-	if _, err := os.Stat(outputpath); os.IsNotExist(err) {
+	if _, err := os.Stat(outputpath); os.IsNotExist(err) && outputpath != "" {
 		if err = os.MkdirAll(outputpath, 0755); err != nil {
 			return err
 		}
@@ -100,9 +101,12 @@ func (v *Vortex) processTemplate(templatepath, outputpath string) error {
 	if err = tmpl.Execute(writer, v.variables); err != nil {
 		return err
 	}
+
+	// Don't write the file if we have been told to validate only
 	if !v.strict {
 		filename := path.Join(outputpath, path.Base(templatepath))
 		return ioutil.WriteFile(filename, writer.Bytes(), 0644)
 	}
-	return nil
+	// ensure that we have a valid yaml file at the end of it
+	return yaml.UnmarshalStrict(writer.Bytes(), map[string]interface{}{})
 }
