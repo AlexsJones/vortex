@@ -58,7 +58,8 @@ func (v *Vortex) ProcessTemplates(templateroot, outputroot string) error {
 	for _, file := range files {
 		readpath := path.Join(templateroot, file.Name())
 		switch {
-		case file.IsDir():
+		// Ensure we don't automatically recurse down hidden files
+		case file.IsDir() && !strings.HasPrefix(file.Name(), "."):
 			newroot := path.Join(outputroot, file.Name())
 			if err := v.ProcessTemplates(readpath, newroot); err != nil {
 				return err
@@ -78,7 +79,8 @@ func (v *Vortex) processTemplate(templatepath, outputpath string) error {
 		return nil
 	}
 	// if the folder path doesn't exist, then we need to make it
-	if _, err := os.Stat(outputpath); os.IsNotExist(err) && outputpath != "" {
+	// and make sure we don't create a directory if we are just validating the contents
+	if _, err := os.Stat(outputpath); os.IsNotExist(err) && !v.strict {
 		if err = os.MkdirAll(outputpath, 0755); err != nil {
 			return err
 		}

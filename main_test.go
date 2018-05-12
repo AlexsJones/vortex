@@ -1,10 +1,10 @@
 package main_test
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -12,11 +12,16 @@ import (
 	"github.com/AlexsJones/vortex/processor"
 )
 
+func TestVortexFunctionality(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Vortex Suite")
+}
+
 var _ = Describe("Vortex loading variables", func() {
 	var (
 		vort          = processor.New()
-		flatstructure = "test_files/vars.yaml"
-		invalid_file  = "test_files/badvars.yaml"
+		flatstructure = "example/vars.vortex"
+		invalid_file  = "example/.mistyped/variables.yaml"
 	)
 	Context("With a valid template file", func() {
 		It("Should not report an error", func() {
@@ -40,9 +45,9 @@ var _ = Describe("Vortex loading variables", func() {
 
 var _ = Describe("Vortex validating templates", func() {
 	var (
-		variablePath = "test_files/vars.yaml"
-		templatefile = "test_files/test1.yaml"
-		badTemplate  = "test_files/badtemplate.yaml"
+		variablePath = "example/vars.vortex"
+		templatefile = "example/demo.yaml"
+		badTemplate  = "example/.mistyped/template.yaml"
 	)
 	Context("With a valid template and variables defined", func() {
 		It("should not error", func() {
@@ -98,18 +103,17 @@ var _ = Describe("Processing templates with vortex", func() {
 			dir, err := ioutil.TempDir("", "output")
 			Expect(err).NotTo(HaveOccurred())
 
+			// Ensure we clean up after ourselves
 			defer os.RemoveAll(dir)
-			fmt.Println("The directories are:", dir)
+
 			err = vort.LoadVariables(varPath)
 			Expect(err).NotTo(HaveOccurred())
 			err = vort.ProcessTemplates(templateDir, dir)
 			Expect(err).NotTo(HaveOccurred())
-			if _, err = os.Stat(path.Join(dir, "demo.yaml")); os.IsNotExist(err) {
-				Expect(err).NotTo(HaveOccurred())
-			}
-			if _, err = os.Stat(path.Join(dir, "bar/example.yaml")); os.IsNotExist(err) {
-				Expect(err).NotTo(HaveOccurred())
-			}
+			_, err = os.Stat(path.Join(dir, "demo.yaml"))
+			Expect(os.IsNotExist(err)).NotTo(Equal(true))
+			_, err = os.Stat(path.Join(dir, "bar/example.yaml"))
+			Expect(os.IsNotExist(err)).NotTo(Equal(true))
 		})
 	})
 })

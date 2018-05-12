@@ -1,0 +1,10 @@
+---
+# This should not cause issues in bulk processing
+# as it is in a linux hidden directory
+
+# This file should report an error as these vars are not correctly set
+
+Thing: Blah
+Blah: |
+  context is key my friend
+Context ; thing
