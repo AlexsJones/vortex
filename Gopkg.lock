@@ -2,16 +2,6 @@
 
 
 [[projects]]
-  name = "github.com/DATA-DOG/godog"
-  packages = [
-    ".",
-    "colors",
-    "gherkin"
-  ]
-  revision = "0371765570d36374bef4ab9f62ed0491f0862a3c"
-  version = "v0.7.6"
-
-[[projects]]
   name = "github.com/onsi/ginkgo"
   packages = [
     ".",
@@ -104,6 +94,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f8574e60d19ca93205cf4131b0a46be2ee33d710ababb4acc258cd7868371405"
+  inputs-digest = "aa8c21eb0775cf61a895ba49d779e6562da22994d30ddcbf43cd8209505311cb"
   solver-name = "gps-cdcl"
   solver-version = 1

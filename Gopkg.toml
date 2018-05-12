@@ -26,17 +26,9 @@
 
 
 [[constraint]]
-  name = "github.com/fatih/color"
-  version = "1.6.0"
-
-[[constraint]]
   name = "gopkg.in/yaml.v2"
   version = "2.2.1"
 
 [prune]
   go-tests = true
   unused-packages = true
-
-[[constraint]]
-  name = "github.com/DATA-DOG/godog"
-  version = "0.7.6"
