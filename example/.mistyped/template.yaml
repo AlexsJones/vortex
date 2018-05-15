@@ -1,0 +1,8 @@
+---
+# This file is a valid template but an invalid yaml file
+# Therefore it should fail the vortex validate step
+
+Key : Type
+Hello: |
+  Nice to meet you sonny
+Context; {{ .Image }}
