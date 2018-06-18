@@ -90,7 +90,7 @@ func (v *Vortex) processTemplate(templatepath, outputpath string) error {
 	if _, err := os.Stat(outputpath); os.IsNotExist(err) && !v.strict {
 		color.Yellow("Creating the output directory as it doesn't exist yet")
 		if err = os.MkdirAll(outputpath, 0755); err != nil {
-			return fmt.Errorf("%v", err.Error())
+			return err
 		}
 		color.Green("%v Directory now exists", outputpath)
 	}
