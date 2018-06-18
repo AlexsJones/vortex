@@ -64,11 +64,11 @@ func main() {
 		return
 	}
 	if err := vortex.LoadVariables(variablePath); err != nil {
-		color.Red("Unable to load files due to:", err.Error())
+		color.Red("Unable to load %v variables", variablePath)
 		os.Exit(1)
 	}
 	if err := vortex.ProcessTemplates(templatePath, outputPath); err != nil {
-		color.Red("Unable to process templates due to:", err.Error())
+		color.Red("Unable to process %v templates ", templatePath)
 		os.Exit(1)
 	}
 }

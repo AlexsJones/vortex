@@ -57,10 +57,6 @@ func (v *Vortex) ProcessTemplates(templateroot, outputroot string) error {
 		return v.processTemplate(templateroot, outputroot)
 	}
 	files, err := ioutil.ReadDir(templateroot)
-	//if empty, notify us
-	if len(files) == 0 {
-		color.Red("The template directory is empty")
-	}
 
 	if err != nil {
 		return err
@@ -96,7 +92,7 @@ func (v *Vortex) processTemplate(templatepath, outputpath string) error {
 		if err = os.MkdirAll(outputpath, 0755); err != nil {
 			return fmt.Errorf("%v", err.Error())
 		}
-		color.Green("Directory now exists")
+		color.Green("%v Directory now exists", outputpath)
 	}
 	if f, err := os.Stat(outputpath); !os.IsNotExist(err) && !f.IsDir() {
 		return fmt.Errorf("%v already exists, needs to be removed in order to process", outputpath)
