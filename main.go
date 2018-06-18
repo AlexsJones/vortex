@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/AlexsJones/vortex/processor"
+	"github.com/fatih/color"
 )
 
 /*********************************************************************************
@@ -63,10 +64,14 @@ func main() {
 		return
 	}
 	if err := vortex.LoadVariables(variablePath); err != nil {
+		color.Set(color.FgRed)
+		defer color.Unset()
 		fmt.Println("Unable to load files due to:", err)
 		os.Exit(1)
 	}
 	if err := vortex.ProcessTemplates(templatePath, outputPath); err != nil {
+		color.Set(color.FgRed)
+		defer color.Unset()
 		fmt.Println("Unable to process templates due to:", err)
 		os.Exit(1)
 	}

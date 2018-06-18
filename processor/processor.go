@@ -9,6 +9,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/fatih/color"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -24,6 +25,7 @@ func New() *Vortex {
 
 // LoadVariables will read from a file path and load Vortex with the variables ready
 func (v *Vortex) LoadVariables(variablepath string) error {
+
 	if _, err := os.Stat(variablepath); os.IsNotExist(err) {
 		return fmt.Errorf("%v is not a valid path", variablepath)
 	}
@@ -46,12 +48,19 @@ func (v *Vortex) ProcessTemplates(templateroot, outputroot string) error {
 	// If the templateroot is a file, just process that
 	root, err := os.Stat(templateroot)
 	if os.IsNotExist(err) {
+		color.Set(color.FgRed)
+		defer color.Unset()
 		return fmt.Errorf("%v does not exist", templateroot)
 	}
 	if !root.IsDir() {
 		return v.processTemplate(templateroot, outputroot)
 	}
 	files, err := ioutil.ReadDir(templateroot)
+	//if empty, notify us
+	if len(files) == 0 {
+		color.Red("The template directory is empty")
+	}
+
 	if err != nil {
 		return err
 	}
@@ -82,10 +91,22 @@ func (v *Vortex) processTemplate(templatepath, outputpath string) error {
 	// and make sure we don't create a directory if we are just validating the contents
 	if _, err := os.Stat(outputpath); os.IsNotExist(err) && !v.strict {
 		if err = os.MkdirAll(outputpath, 0755); err != nil {
-			return err
+
+			//print error
+			color.Set(color.FgRed)
+			defer color.Unset()
+			return fmt.Errorf("%v", err.Error())
+
 		}
+		//print
+		g := color.New(color.FgHiRed).Add(color.Bold)
+		g.Println("Creating the output directory as it doesn't exist yet")
+
 	}
 	if f, err := os.Stat(outputpath); !os.IsNotExist(err) && !f.IsDir() {
+		//color print
+		color.Set(color.FgYellow)
+		defer color.Unset()
 		return fmt.Errorf("%v already exists, needs to be removed in order to process", outputpath)
 	}
 	buff, err := ioutil.ReadFile(templatepath)
