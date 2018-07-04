@@ -94,8 +94,9 @@ func (v *Vortex) processTemplate(templatepath, outputpath string) error {
 		}
 		color.Green("%v Directory now exists", outputpath)
 	}
-	if f, err := os.Stat(outputpath); !os.IsNotExist(err) && !f.IsDir() {
-		return fmt.Errorf("%v already exists, needs to be removed in order to process", outputpath)
+	filename := path.Join(outputpath, path.Base(templatepath))
+	if f, err := os.Stat(filename); !os.IsNotExist(err) && !f.IsDir() {
+		return fmt.Errorf("%v already exists, needs to be removed in order to process", filename)
 	}
 	color.Green("Reading file %v", templatepath)
 	buff, err := ioutil.ReadFile(templatepath)
@@ -116,8 +117,7 @@ func (v *Vortex) processTemplate(templatepath, outputpath string) error {
 
 	// Don't write the file if we have been told to validate only
 	if !v.strict {
-		color.Green("Attempting to write file to %v", outputpath)
-		filename := path.Join(outputpath, path.Base(templatepath))
+		color.Green("Attempting to write file to %v", filename)
 		return ioutil.WriteFile(filename, writer.Bytes(), 0644)
 	}
 	// ensure that we have a valid yaml file at the end of it
