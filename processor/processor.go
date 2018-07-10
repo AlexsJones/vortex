@@ -24,6 +24,7 @@ func New() *Vortex {
 	return &Vortex{}
 }
 
+// EnableDebug enables logging for Vortex
 func (v *Vortex) EnableDebug() *Vortex {
 	v.debug = true
 	return v
