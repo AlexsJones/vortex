@@ -9,7 +9,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/fatih/color"
 	log "github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -53,12 +52,8 @@ func (v *Vortex) EnableStrict() *Vortex {
 func (v *Vortex) ProcessTemplates(templateroot, outputroot string) error {
 	// If the folder path doesn't exist, then say so
 	// If the templateroot is a file, just process that
-
-	//if debug is enabled
-	if v.debug {
-		log.Debug("Output directory: %v", strings.Title(outputroot))
-	}
-	color.Blue("Template directory: %v", templateroot)
+	v.logMessage("Output directory: ", outputroot)
+	v.logMessage("Template directory: ", templateroot)
 
 	root, err := os.Stat(templateroot)
 	if os.IsNotExist(err) {
@@ -93,31 +88,22 @@ func (v *Vortex) ProcessTemplates(templateroot, outputroot string) error {
 
 func (v *Vortex) processTemplate(templatepath, outputpath string) error {
 	if !strings.HasSuffix(templatepath, ".yaml") {
-		color.Yellow("The template directory does not contain any yaml files")
 		return nil
 	}
 	// if the folder path doesn't exist, then we need to make it
 	// and make sure we don't create a directory if we are just validating the contents
 	if _, err := os.Stat(outputpath); os.IsNotExist(err) && !v.strict {
-		if v.debug {
-			log.Debug("Creating the output directory as it doesn't exist yet")
-		}
+		v.logMessage("Creating the output directory as it doesn't exist yet")
 		if err = os.MkdirAll(outputpath, 0755); err != nil {
 			return err
 		}
-		if v.debug {
-			log.Debug("%v Directory now exists", outputpath)
-		}
-		//color.Green("%v Directory now exists", outputpath)
+		v.logMessage(outputpath, "Directory now exists")
 	}
 	filename := path.Join(outputpath, path.Base(templatepath))
 	if f, err := os.Stat(filename); !os.IsNotExist(err) && !f.IsDir() {
 		return fmt.Errorf("%v already exists, needs to be removed in order to process", filename)
 	}
-	if v.debug {
-		log.Debug("Reading file %v", templatepath)
-	}
-	//color.Green("Reading file %v", templatepath)
+	v.logMessage("Reading file", templatepath)
 	buff, err := ioutil.ReadFile(templatepath)
 	if err != nil {
 		return err
@@ -136,10 +122,21 @@ func (v *Vortex) processTemplate(templatepath, outputpath string) error {
 
 	// Don't write the file if we have been told to validate only
 	if !v.strict {
-		color.Green("Attempting to write file to %v", filename)
-		return ioutil.WriteFile(filename, writer.Bytes(), 0644)
+
+		v.logMessage("Attempting to write file to ", filename)
+		if err := ioutil.WriteFile(filename, writer.Bytes(), 0644); err != nil {
+			return err
+		}
+		v.logMessage("Successfully writen to: ", filename)
+		return nil
 	}
 	// ensure that we have a valid yaml file at the end of it
-	color.Green("Attempting to validate %v", templatepath)
+	v.logMessage("Attempting to validate %v", templatepath)
 	return yaml.UnmarshalStrict(writer.Bytes(), map[string]interface{}{})
+}
+
+func (v *Vortex) logMessage(args ...interface{}) {
+	if v.debug {
+		log.Info(args)
+	}
 }
