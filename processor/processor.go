@@ -137,6 +137,6 @@ func (v *Vortex) processTemplate(templatepath, outputpath string) error {
 
 func (v *Vortex) logMessage(args ...interface{}) {
 	if v.debug {
-		log.Info(args)
+		log.Info(args...)
 	}
 }
