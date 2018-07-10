@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	"github.com/fatih/color"
+	log "github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -17,10 +18,16 @@ import (
 type Vortex struct {
 	variables map[string]interface{}
 	strict    bool
+	debug     bool
 }
 
 func New() *Vortex {
 	return &Vortex{}
+}
+
+func (v *Vortex) EnableDebug() *Vortex {
+	v.debug = true
+	return v
 }
 
 // LoadVariables will read from a file path and load Vortex with the variables ready
@@ -46,8 +53,12 @@ func (v *Vortex) EnableStrict() *Vortex {
 func (v *Vortex) ProcessTemplates(templateroot, outputroot string) error {
 	// If the folder path doesn't exist, then say so
 	// If the templateroot is a file, just process that
+
+	//if debug is enabled
+	if v.debug {
+		log.Debug("Output directory: %v", strings.Title(outputroot))
+	}
 	color.Blue("Template directory: %v", templateroot)
-	color.Blue("Output directory: %v", outputroot)
 
 	root, err := os.Stat(templateroot)
 	if os.IsNotExist(err) {
@@ -88,17 +99,25 @@ func (v *Vortex) processTemplate(templatepath, outputpath string) error {
 	// if the folder path doesn't exist, then we need to make it
 	// and make sure we don't create a directory if we are just validating the contents
 	if _, err := os.Stat(outputpath); os.IsNotExist(err) && !v.strict {
-		color.Yellow("Creating the output directory as it doesn't exist yet")
+		if v.debug {
+			log.Debug("Creating the output directory as it doesn't exist yet")
+		}
 		if err = os.MkdirAll(outputpath, 0755); err != nil {
 			return err
 		}
-		color.Green("%v Directory now exists", outputpath)
+		if v.debug {
+			log.Debug("%v Directory now exists", outputpath)
+		}
+		//color.Green("%v Directory now exists", outputpath)
 	}
 	filename := path.Join(outputpath, path.Base(templatepath))
 	if f, err := os.Stat(filename); !os.IsNotExist(err) && !f.IsDir() {
 		return fmt.Errorf("%v already exists, needs to be removed in order to process", filename)
 	}
-	color.Green("Reading file %v", templatepath)
+	if v.debug {
+		log.Debug("Reading file %v", templatepath)
+	}
+	//color.Green("Reading file %v", templatepath)
 	buff, err := ioutil.ReadFile(templatepath)
 	if err != nil {
 		return err
