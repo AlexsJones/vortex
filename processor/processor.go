@@ -131,7 +131,7 @@ func (v *Vortex) processTemplate(templatepath, outputpath string) error {
 		return nil
 	}
 	// ensure that we have a valid yaml file at the end of it
-	v.logMessage("Attempting to validate %v", templatepath)
+	v.logMessage("Attempting to validate", templatepath)
 	return yaml.UnmarshalStrict(writer.Bytes(), map[string]interface{}{})
 }
 
