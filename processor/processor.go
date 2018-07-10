@@ -122,7 +122,6 @@ func (v *Vortex) processTemplate(templatepath, outputpath string) error {
 
 	// Don't write the file if we have been told to validate only
 	if !v.strict {
-
 		v.logMessage("Attempting to write file to ", filename)
 		if err := ioutil.WriteFile(filename, writer.Bytes(), 0644); err != nil {
 			return err
