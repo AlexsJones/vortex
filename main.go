@@ -22,7 +22,7 @@ The desired usage is to read from a variables file (defined in yaml)
 and template in the variables into the given templates.
 Thus, the usage of the program is:
 
-%s --template path --varpath path [--validate] [--output path] [--verbose]
+%s --template path --varpath path [--validate] [--output path] [--verbose] [--set var [...]]
 
 The flags being used are:
 `
