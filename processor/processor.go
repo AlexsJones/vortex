@@ -55,7 +55,7 @@ func (v *vortex) LoadVariables(variablepath string) error {
 	if _, err := os.Stat(variablepath); os.IsNotExist(err) {
 		// Possible that we have loaded variables already so
 		// it is safe to continue
-		if len(v.variables) != 0 {
+		if len(v.variables) != 0 && variablepath == "" {
 			return nil
 		}
 		return fmt.Errorf("%v is not a valid path", variablepath)
