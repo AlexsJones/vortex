@@ -32,6 +32,7 @@ var (
 	variablePath string
 	outputPath   string
 	validate     bool
+	vortex       = processor.New()
 )
 
 func init() {
@@ -42,6 +43,7 @@ func init() {
 	flag.StringVar(&variablePath, "varpath", blank, "path to the variable config to use while processing")
 	flag.StringVar(&outputPath, "output", "./", "Output path for the rendered templates to be outputted")
 	flag.BoolVar(&validate, "validate", false, "validate syntax and check for the required variables")
+	flag.Var(flag.Value(vortex), "set", "Add additional variables via the command line in the format of \"key=value\"")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, usage, os.Args[0], os.Args[0])
 		flag.PrintDefaults()
@@ -50,9 +52,6 @@ func init() {
 
 func main() {
 	flag.Parse()
-	var (
-		vortex = processor.New()
-	)
 	switch {
 	case variablePath != "" && templatePath != "":
 		if validate {

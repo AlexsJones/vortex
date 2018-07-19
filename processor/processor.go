@@ -2,6 +2,7 @@ package processor
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -20,6 +21,21 @@ type Vortex struct {
 
 func New() *Vortex {
 	return &Vortex{}
+}
+
+// Set allows the user to define variables as command line arguments
+func (v *Vortex) Set(input string) error {
+	data := strings.Split(input, "=")
+	// If we don't have a key value pair split by = then reject it
+	if len(data) != 2 {
+		return errors.New("Incorrect format, expect key=value")
+	}
+	v.variables[data[0]] = data[1]
+	return nil
+}
+
+func (v *Vortex) String() string {
+	return fmt.Sprintf("Vortex has %v loaded", len(v.variables))
 }
 
 // LoadVariables will read from a file path and load Vortex with the variables ready
