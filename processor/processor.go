@@ -26,12 +26,15 @@ func New() *vortex {
 
 // Set allows the user to define variables as command line arguments
 func (v *vortex) Set(input string) error {
-	data := strings.Split(input, "=")
-	// If we don't have a key value pair split by = then reject it
-	if len(data) != 2 {
-		return errors.New("Incorrect format, expect key=value")
+	// Lets try Unmarshal a json like object and try key value pairs if all else fails
+	if err := yaml.Unmarshal([]byte(input), &(v.variables)); err != nil {
+		data := strings.Split(input, "=")
+		// If we don't have a key value pair split by = then reject it
+		if len(data) != 2 {
+			return errors.New("Incorrect format, expect key=value")
+		}
+		v.variables[data[0]] = data[1]
 	}
-	v.variables[data[0]] = data[1]
 	return nil
 }
 
