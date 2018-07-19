@@ -45,8 +45,8 @@ func (v *vortex) String() string {
 }
 
 // EnableDebug enables logging for Vortex
-func (v *vortex) EnableDebug() *vortex {
-	v.debug = true
+func (v *vortex) EnableDebug(enable bool) *vortex {
+	v.debug = enable
 	return v
 }
 
@@ -67,8 +67,8 @@ func (v *vortex) LoadVariables(variablepath string) error {
 	return yaml.Unmarshal(buff, &(v.variables))
 }
 
-func (v *vortex) EnableStrict() *vortex {
-	v.strict = true
+func (v *vortex) EnableStrict(enable bool) *vortex {
+	v.strict = enable
 	return v
 }
 

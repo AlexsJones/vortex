@@ -55,18 +55,14 @@ func init() {
 
 func main() {
 	flag.Parse()
-	switch {
-	case templatePath != "":
-		if validate {
-			vortex.EnableStrict()
-		}
-	default:
+	// If we don't have a template path, show the help messsage so the user
+	// can try again
+	if templatePath != "" {
 		flag.Usage()
 		return
 	}
-	if debug {
-		vortex.EnableDebug()
-	}
+	vortex = vortex.EnableDebug(debug).
+		EnableStrict(validate)
 	if err := vortex.LoadVariables(variablePath); err != nil {
 		log.Warn("Unable to load variables due to", err)
 		os.Exit(1)

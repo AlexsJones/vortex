@@ -55,7 +55,7 @@ var _ = Describe("Vortex validating templates", func() {
 			if err := vort.LoadVariables(variablePath); err != nil {
 				Expect(err).NotTo(HaveOccurred())
 			}
-			err := vort.EnableStrict().ProcessTemplates(templatefile, "./")
+			err := vort.EnableStrict(true).ProcessTemplates(templatefile, "./")
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})
@@ -65,14 +65,14 @@ var _ = Describe("Vortex validating templates", func() {
 			if err := vort.LoadVariables(variablePath); err != nil {
 				Expect(err).NotTo(HaveOccurred())
 			}
-			err := vort.EnableStrict().ProcessTemplates(badTemplate, "")
+			err := vort.EnableStrict(true).ProcessTemplates(badTemplate, "")
 			Expect(err).To(HaveOccurred())
 		})
 	})
 	Context("With a validate template but missing variables", func() {
 		It("Should report an error", func() {
 			vort := processor.New()
-			err := vort.EnableStrict().ProcessTemplates(badTemplate, "")
+			err := vort.EnableStrict(true).ProcessTemplates(badTemplate, "")
 			Expect(err).To(HaveOccurred())
 		})
 	})
@@ -86,7 +86,7 @@ var _ = Describe("Vortex validating templates", func() {
 			if err := vort.LoadVariables(varPath); err != nil {
 				Expect(err).NotTo(HaveOccurred())
 			}
-			err := vort.EnableStrict().ProcessTemplates(templateDir, "")
+			err := vort.EnableStrict(true).ProcessTemplates(templateDir, "")
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})
