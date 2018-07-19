@@ -46,7 +46,7 @@ func init() {
 	flag.StringVar(&outputPath, "output", "./", "Output path for the rendered templates to be outputted")
 	flag.BoolVar(&validate, "validate", false, "validate syntax and check for the required variables")
 	flag.BoolVar(&debug, "verbose", false, "enable verbose logging")
-	flag.Var(flag.Value(vortex), "set", "Add additional variables via the command line in the format of \"key=value\"")
+	flag.Var(flag.Value(vortex), "set", "Add additional variables via the command line in the format of \"key=value\" or valid json/yaml")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, usage, os.Args[0], os.Args[0])
 		flag.PrintDefaults()
