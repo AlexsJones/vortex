@@ -21,7 +21,9 @@ type vortex struct {
 }
 
 func New() *vortex {
-	return &vortex{}
+	return &vortex{
+		variables: map[string]interface{}{},
+	}
 }
 
 // Set allows the user to define variables as command line arguments
@@ -51,6 +53,11 @@ func (v *vortex) EnableDebug() *vortex {
 // LoadVariables will read from a file path and load Vortex with the variables ready
 func (v *vortex) LoadVariables(variablepath string) error {
 	if _, err := os.Stat(variablepath); os.IsNotExist(err) {
+		// Possible that we have loaded variables already so
+		// it is safe to continue
+		if len(v.variables) != 0 {
+			return nil
+		}
 		return fmt.Errorf("%v is not a valid path", variablepath)
 	}
 	buff, err := ioutil.ReadFile(variablepath)
@@ -121,7 +128,7 @@ func (v *vortex) processTemplate(templatepath, outputpath string) error {
 	if f, err := os.Stat(filename); !os.IsNotExist(err) && !f.IsDir() {
 		return fmt.Errorf("%v already exists, needs to be removed in order to process", filename)
 	}
-	v.logMessage("Reading file", templatepath)
+	v.logMessage("Reading file: ", templatepath)
 	buff, err := ioutil.ReadFile(templatepath)
 	if err != nil {
 		return err
@@ -148,7 +155,7 @@ func (v *vortex) processTemplate(templatepath, outputpath string) error {
 		return nil
 	}
 	// ensure that we have a valid yaml file at the end of it
-	v.logMessage("Attempting to validate", templatepath)
+	v.logMessage("Attempting to validate: ", templatepath)
 	return yaml.UnmarshalStrict(writer.Bytes(), map[string]interface{}{})
 }
 
