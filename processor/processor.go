@@ -2,6 +2,7 @@ package processor
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -13,27 +14,50 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-// Vortex container of information that are awesome and amazing
-type Vortex struct {
+type vortex struct {
 	variables map[string]interface{}
 	strict    bool
 	debug     bool
 }
 
-func New() *Vortex {
-	return &Vortex{}
+func New() *vortex {
+	return &vortex{
+		variables: map[string]interface{}{},
+	}
+}
+
+// Set allows the user to define variables as command line arguments
+func (v *vortex) Set(input string) error {
+	// Lets try Unmarshal a json like object and try key value pairs if all else fails
+	if err := yaml.Unmarshal([]byte(input), &(v.variables)); err != nil {
+		data := strings.Split(input, "=")
+		// If we don't have a key value pair split by = then reject it
+		if len(data) != 2 {
+			return errors.New("Incorrect format, expect key=value")
+		}
+		v.variables[data[0]] = data[1]
+	}
+	return nil
+}
+
+func (v *vortex) String() string {
+	return fmt.Sprintf("Vortex has %v loaded", len(v.variables))
 }
 
 // EnableDebug enables logging for Vortex
-func (v *Vortex) EnableDebug() *Vortex {
-	v.debug = true
+func (v *vortex) EnableDebug(enable bool) *vortex {
+	v.debug = enable
 	return v
 }
 
 // LoadVariables will read from a file path and load Vortex with the variables ready
-func (v *Vortex) LoadVariables(variablepath string) error {
-
+func (v *vortex) LoadVariables(variablepath string) error {
 	if _, err := os.Stat(variablepath); os.IsNotExist(err) {
+		// Possible that we have loaded variables already so
+		// it is safe to continue
+		if len(v.variables) != 0 && variablepath == "" {
+			return nil
+		}
 		return fmt.Errorf("%v is not a valid path", variablepath)
 	}
 	buff, err := ioutil.ReadFile(variablepath)
@@ -43,14 +67,14 @@ func (v *Vortex) LoadVariables(variablepath string) error {
 	return yaml.Unmarshal(buff, &(v.variables))
 }
 
-func (v *Vortex) EnableStrict() *Vortex {
-	v.strict = true
+func (v *vortex) EnableStrict(enable bool) *vortex {
+	v.strict = enable
 	return v
 }
 
 // ProcessTemplates applys a DFS over the templateroot and will process the
 // templates with the stored vortex variables
-func (v *Vortex) ProcessTemplates(templateroot, outputroot string) error {
+func (v *vortex) ProcessTemplates(templateroot, outputroot string) error {
 	// If the folder path doesn't exist, then say so
 	// If the templateroot is a file, just process that
 	v.logMessage("Output directory: ", outputroot)
@@ -87,7 +111,7 @@ func (v *Vortex) ProcessTemplates(templateroot, outputroot string) error {
 	return nil
 }
 
-func (v *Vortex) processTemplate(templatepath, outputpath string) error {
+func (v *vortex) processTemplate(templatepath, outputpath string) error {
 	if !strings.HasSuffix(templatepath, ".yaml") {
 		return nil
 	}
@@ -104,7 +128,7 @@ func (v *Vortex) processTemplate(templatepath, outputpath string) error {
 	if f, err := os.Stat(filename); !os.IsNotExist(err) && !f.IsDir() {
 		return fmt.Errorf("%v already exists, needs to be removed in order to process", filename)
 	}
-	v.logMessage("Reading file", templatepath)
+	v.logMessage("Reading file: ", templatepath)
 	buff, err := ioutil.ReadFile(templatepath)
 	if err != nil {
 		return err
@@ -131,11 +155,11 @@ func (v *Vortex) processTemplate(templatepath, outputpath string) error {
 		return nil
 	}
 	// ensure that we have a valid yaml file at the end of it
-	v.logMessage("Attempting to validate", templatepath)
+	v.logMessage("Attempting to validate: ", templatepath)
 	return yaml.UnmarshalStrict(writer.Bytes(), map[string]interface{}{})
 }
 
-func (v *Vortex) logMessage(args ...interface{}) {
+func (v *vortex) logMessage(args ...interface{}) {
 	if v.debug {
 		log.Info(args...)
 	}
