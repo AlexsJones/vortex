@@ -57,7 +57,7 @@ func main() {
 	flag.Parse()
 	// If we don't have a template path, show the help messsage so the user
 	// can try again
-	if templatePath != "" {
+	if templatePath == "" {
 		flag.Usage()
 		return
 	}
