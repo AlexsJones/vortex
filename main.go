@@ -55,12 +55,6 @@ func init() {
 
 func main() {
 	flag.Parse()
-	// If we don't have a template path, show the help messsage so the user
-	// can try again
-	if templatePath == "" {
-		flag.Usage()
-		return
-	}
 	vortex = vortex.EnableDebug(debug).
 		EnableStrict(validate)
 	if err := vortex.LoadVariables(variablePath); err != nil {
