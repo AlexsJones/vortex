@@ -18,11 +18,13 @@ type vortex struct {
 	variables map[string]interface{}
 	strict    bool
 	debug     bool
+	filter    *regexp.Regexp
 }
 
 func New() *vortex {
 	return &vortex{
 		variables: map[string]interface{}{},
+		filter: regexp.MustCompile(`.ya?ml$`),
 	}
 }
 
@@ -70,6 +72,15 @@ func (v *vortex) LoadVariables(variablepath string) error {
 func (v *vortex) EnableStrict(enable bool) *vortex {
 	v.strict = enable
 	return v
+}
+
+func (v *vortex) SetFilter(filter string) *vortex {
+	v.filter = regexp.MustCompile(filter)
+	return v
+}
+
+func (v *vortex) canProcess(templatepath string) bool {
+	return v.filter.MatchString(templatepath)
 }
 
 // ProcessTemplates applys a DFS over the templateroot and will process the
