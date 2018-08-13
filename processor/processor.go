@@ -96,8 +96,12 @@ func (v *vortex) ProcessTemplates(templateroot, outputroot string) error {
 		readpath := path.Join(templateroot, file.Name())
 		switch {
 		// Ensure we don't automatically recurse down hidden files
-		case file.IsDir() && !strings.HasPrefix(file.Name(), "."):
+		case file.IsDir():
 			newroot := path.Join(outputroot, file.Name())
+			if strings.HasPrefix(file.Name(), ".") {
+				v.logMessage("Skipping hidden file: ", newroot)
+				continue
+			}
 			if err := v.ProcessTemplates(readpath, newroot); err != nil {
 				return err
 			}
