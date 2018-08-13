@@ -1,4 +1,0 @@
----
-# Should be skipped due to be being a wrong file extension
-
-Item : {{ .ShouldExplode }}
