@@ -128,6 +128,10 @@ func (v *vortex) ProcessTemplates(templateroot, outputroot string) error {
 }
 
 func (v *vortex) processTemplate(templatepath, outputpath string) error {
+	if !v.canProcess(templatepath) {
+		v.logMessage("Can not process: ", templatepath)
+		return nil
+	}
 	// if the folder path doesn't exist, then we need to make it
 	// and make sure we don't create a directory if we are just validating the contents
 	if _, err := os.Stat(outputpath); os.IsNotExist(err) && !v.strict {
