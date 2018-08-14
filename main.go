@@ -32,6 +32,7 @@ var (
 	templatePath string
 	variablePath string
 	outputPath   string
+	filter       string
 	debug        bool
 	validate     bool
 	vortex       = processor.New()
@@ -46,6 +47,7 @@ func init() {
 	flag.StringVar(&outputPath, "output", "./", "Output path for the rendered templates to be outputted")
 	flag.BoolVar(&validate, "validate", false, "validate syntax and check for the required variables")
 	flag.BoolVar(&debug, "verbose", false, "enable verbose logging")
+	flag.StringVar(&filter, "filter", "ya?ml$", "Allows for filtered parsing of directories")
 	flag.Var(flag.Value(vortex), "set", "Add additional variables via the command line in the format of \"key=value\" or valid json/yaml")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, usage, os.Args[0], os.Args[0])
@@ -56,7 +58,8 @@ func init() {
 func main() {
 	flag.Parse()
 	vortex = vortex.EnableDebug(debug).
-		EnableStrict(validate)
+		EnableStrict(validate).
+		SetFilter(filter)
 	if err := vortex.LoadVariables(variablePath); err != nil {
 		log.Warn("Unable to load variables due to", err)
 		os.Exit(1)
