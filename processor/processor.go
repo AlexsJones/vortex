@@ -9,6 +9,7 @@ import (
 	"path"
 	"strings"
 	"text/template"
+	"regexp"
 
 	log "github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
