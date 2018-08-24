@@ -7,10 +7,11 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 	"text/template"
-	"regexp"
 
+	"github.com/AlexsJones/vortex/secrets"
 	log "github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -25,7 +26,7 @@ type vortex struct {
 func New() *vortex {
 	return &vortex{
 		variables: map[string]interface{}{},
-		filter: regexp.MustCompile(`.ya?ml$`),
+		filter:    regexp.MustCompile(`.ya?ml$`),
 	}
 }
 
@@ -150,7 +151,11 @@ func (v *vortex) processTemplate(templatepath, outputpath string) error {
 	if err != nil {
 		return err
 	}
-	tmpl, err := template.New(path.Base(templatepath)).Parse(string(buff))
+	tmpl, err := template.New(path.Base(templatepath)).
+		Funcs(template.FuncMap{
+			"vaultsecret": secrets.VaultFetchSecret,
+		}).
+		Parse(string(buff))
 	if err != nil {
 		return err
 	}

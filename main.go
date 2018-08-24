@@ -61,11 +61,11 @@ func main() {
 		EnableStrict(validate).
 		SetFilter(filter)
 	if err := vortex.LoadVariables(variablePath); err != nil {
-		log.Warn("Unable to load variables due to", err)
+		log.Warn("Unable to load variables due to ", err)
 		os.Exit(1)
 	}
 	if err := vortex.ProcessTemplates(templatePath, outputPath); err != nil {
-		log.Warn("Unable to process templates due to", err)
+		log.Warn("Unable to process templates due to ", err)
 		os.Exit(1)
 	}
 }

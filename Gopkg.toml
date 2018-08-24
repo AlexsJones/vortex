@@ -44,3 +44,11 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  name = "gopkg.in/go-playground/validator.v9"
+  version = "9.21.0"
+
+[[constraint]]
+  name = "github.com/hashicorp/vault"
+  version = "0.10.4"
