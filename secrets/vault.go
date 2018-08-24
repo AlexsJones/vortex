@@ -4,7 +4,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
-	"os/user"
 	"path"
 
 	"github.com/hashicorp/vault/api"
@@ -17,7 +16,7 @@ var (
 
 type vault struct {
 	token   string `validate:"required"`
-	address string `validate:"required"`
+	address string `validate:"gt=1"`
 }
 
 // NewVaultFromEnv creates a vault SecretObtainer
@@ -26,14 +25,12 @@ func NewVaultFromEnv() (*vault, error) {
 	v := &vault{
 		address: "http://localhost:8200",
 	}
-	if usr, err := user.Current(); err != nil {
-		if f, err := os.Open(path.Join(usr.HomeDir, ".vault-token")); os.IsExist(err) {
-			buff, err := ioutil.ReadAll(f)
-			if err != nil {
-				return nil, err
-			}
-			v.token = string(buff)
+	if f, err := os.Open(path.Join(os.Getenv("HOME"), ".vault-token")); !os.IsNotExist(err) {
+		buff, err := ioutil.ReadAll(f)
+		if err != nil {
+			return nil, err
 		}
+		v.token = string(buff)
 	}
 	if token, set := os.LookupEnv("VAULT_TOKEN"); set && len(v.token) == 0 {
 		v.token = token
