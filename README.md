@@ -103,3 +103,13 @@ kubernetes:
           port: 9090
           name: openport
  ```
+
+Loading a variable from a running vault instance.
+```
+env:
+    API_KEY: {{ vaultsecret "/secret/path/to/secret" "keyInDataMap" }}
+```
+
+For this to work, you will need to have:
+- VAULT_ADDR exported in your shell to the running vault instance
+- VAULT_TOKEN exported in your shell if "${HOME}/.vault-token" isn't present
