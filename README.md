@@ -113,3 +113,13 @@ env:
 For this to work, you will need to have:
 - VAULT_ADDR exported in your shell to the running vault instance
 - VAULT_TOKEN exported in your shell if "${HOME}/.vault-token" isn't present
+
+Using environment variables inside your templates:
+```
+---
+annotations:
+  UpdatedBy: {{ getenv "USER" }}
+  SecretUsed: {{ getenv "SECRET_TOKEN" }}
+```
+This enables secrets to be loaded via environment variables rather than alternative methods such as using `sed` over
+the template before processing.
