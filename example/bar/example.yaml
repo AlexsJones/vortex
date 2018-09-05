@@ -5,3 +5,4 @@ items:
     - {{ .image }}
     - {{ .image }}
     - {{ .image }}
+HomeDir: {{ getenv "HOME" }}

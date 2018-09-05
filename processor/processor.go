@@ -154,6 +154,7 @@ func (v *vortex) processTemplate(templatepath, outputpath string) error {
 	tmpl, err := template.New(path.Base(templatepath)).
 		Funcs(template.FuncMap{
 			"vaultsecret": secrets.VaultFetchSecret,
+			"getenv":      os.Getenv,
 		}).
 		Parse(string(buff))
 	if err != nil {
