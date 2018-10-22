@@ -143,7 +143,7 @@ func (v *vortex) processTemplate(templatepath, outputpath string) error {
 		v.logMessage(outputpath, "Directory now exists")
 	}
 	filename := path.Join(outputpath, path.Base(templatepath))
-	if f, err := os.Stat(filename); !os.IsNotExist(err) && !f.IsDir() {
+	if f, err := os.Stat(filename); !os.IsNotExist(err) && !f.IsDir() && !v.strict{
 		return fmt.Errorf("%v already exists, needs to be removed in order to process", filename)
 	}
 	v.logMessage("Reading file: ", templatepath)
