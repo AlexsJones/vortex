@@ -79,32 +79,60 @@ vortex -template somefolders -output anoutputfolder -var example/vars.yaml
 
 
 ### Other examples
-```
-build:
-  commands: docker build --no-cache=true -t {{ .name }}:{{ .version }} .
-  docker:
-    containerID: {{ .name }}:{{ .version }}
-    buildArgs:
-      url: {{ .repoistory }}/{{ .name }}:{{ .version }}
-kubernetes:
-  namespace: {{ .namespace }}
-  service: |-
-    kind: Service
-    apiVersion: v1
-    metadata:
-      name: {{ .name }}
-      namespace: {{ .namespace }}
-    spec:
-      type: NodePort
-      selector:
-        app: {{ .name }}
-      ports:
-        - protocol: TCP
-          port: 9090
-          name: openport
- ```
 
-Loading a variable from a running vault instance.
+The perfect Kubernetes companion...
+
+```
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{.info.namespace}}-ingress
+  namespace: {{.info.namespace}}
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    kubernetes.io/ingress.allow-http: "false"
+spec:
+  tls:
+  {{ range .ingress }}
+  - hosts:
+    - {{.ing.hostname}}
+    secretName: {{.ing.tlssecretname}}
+  {{end}}
+  rules:
+  {{ range .ingress }}
+  - host: {{.ing.hostname}}
+    http:
+      paths:
+      - backend:
+          serviceName: {{.ing.servicename}}
+          servicePort: {{.ing.serviceport}}
+  {{end}}
+
+ ```
+ ```
+ apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubernetes-{{.info.environment}}-service-account
+  namespace: frontier
+
+---
+
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: kubernetes-{{.info.environment}}-service-account-binding
+subjects:
+  - kind: ServiceAccount
+    name: kubernetes-{{.info.environment}}-service-account
+    namespace: frontier
+roleRef:
+  kind: ClusterRole
+  name: view
+  apiGroup: ""
+ ```
+ 
+### Loading a variable from a connected vault instance.
 ```
 env:
     API_KEY: {{ vaultsecret "/secret/path/to/secret" "keyInDataMap" }}
