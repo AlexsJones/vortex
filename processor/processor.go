@@ -20,6 +20,7 @@ type vortex struct {
 	variables map[string]interface{}
 	strict    bool
 	debug     bool
+	validator string
 	filter    *regexp.Regexp
 }
 
@@ -27,6 +28,7 @@ func New() *vortex {
 	return &vortex{
 		variables: map[string]interface{}{},
 		filter:    regexp.MustCompile(`.ya?ml$`),
+		validator: "yaml",
 	}
 }
 
@@ -51,6 +53,11 @@ func (v *vortex) String() string {
 // EnableDebug enables logging for Vortex
 func (v *vortex) EnableDebug(enable bool) *vortex {
 	v.debug = enable
+	return v
+}
+
+func (v *vortex) SetValidator(validator string) *vortex {
+	v.validator = validator
 	return v
 }
 
@@ -143,7 +150,7 @@ func (v *vortex) processTemplate(templatepath, outputpath string) error {
 		v.logMessage(outputpath, "Directory now exists")
 	}
 	filename := path.Join(outputpath, path.Base(templatepath))
-	if f, err := os.Stat(filename); !os.IsNotExist(err) && !f.IsDir() && !v.strict{
+	if f, err := os.Stat(filename); !os.IsNotExist(err) && !f.IsDir() && !v.strict {
 		return fmt.Errorf("%v already exists, needs to be removed in order to process", filename)
 	}
 	v.logMessage("Reading file: ", templatepath)
@@ -177,13 +184,23 @@ func (v *vortex) processTemplate(templatepath, outputpath string) error {
 		v.logMessage("Successfully writen to: ", filename)
 		return nil
 	}
-	// ensure that we have a valid yaml file at the end of it
-	v.logMessage("Attempting to validate: ", templatepath)
-	return yaml.UnmarshalStrict(writer.Bytes(), map[string]interface{}{})
+	return v.validate(writer.Bytes())
 }
 
 func (v *vortex) logMessage(args ...interface{}) {
 	if v.debug {
 		log.Info(args...)
 	}
+}
+
+func (v *vortex) validate(content []byte) error {
+	switch v.validator {
+	case "yaml", "json":
+		return yaml.Unmarshal(content, map[string]interface{}{})
+	case "text":
+		fallthrough
+	default:
+		v.logMessage("No additional file format validation set")
+	}
+	return nil
 }
