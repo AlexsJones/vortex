@@ -50,7 +50,7 @@ func init() {
 	flag.BoolVar(&debug, "verbose", false, "enable verbose logging")
 	flag.StringVar(&filter, "filter", "ya?ml$", "Allows for filtered parsing of directories")
 	flag.Var(flag.Value(vortex), "set", "Add additional variables via the command line in the format of \"key=value\" or valid json/yaml")
-	flag.StringVar(&validator, "validator", blank, "Set the expected file format to validate for. (text, yaml, json)")
+	flag.StringVar(&validator, "validator", "yaml", "Set the expected file format to validate for")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, usage, os.Args[0], os.Args[0])
 		flag.PrintDefaults()
