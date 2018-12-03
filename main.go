@@ -61,6 +61,7 @@ func main() {
 	flag.Parse()
 	vortex = vortex.EnableDebug(debug).
 		EnableStrict(validate).
+		SetValidator(validator).
 		SetFilter(filter)
 	if err := vortex.LoadVariables(variablePath); err != nil {
 		log.Warn("Unable to load variables due to ", err)
