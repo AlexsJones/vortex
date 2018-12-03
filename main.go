@@ -33,6 +33,7 @@ var (
 	variablePath string
 	outputPath   string
 	filter       string
+	validator    string
 	debug        bool
 	validate     bool
 	vortex       = processor.New()
@@ -49,6 +50,7 @@ func init() {
 	flag.BoolVar(&debug, "verbose", false, "enable verbose logging")
 	flag.StringVar(&filter, "filter", "ya?ml$", "Allows for filtered parsing of directories")
 	flag.Var(flag.Value(vortex), "set", "Add additional variables via the command line in the format of \"key=value\" or valid json/yaml")
+	flag.StringVar(&validator, "validator", "yaml", "Set the expected file format to validate for")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, usage, os.Args[0], os.Args[0])
 		flag.PrintDefaults()
@@ -59,6 +61,7 @@ func main() {
 	flag.Parse()
 	vortex = vortex.EnableDebug(debug).
 		EnableStrict(validate).
+		SetValidator(validator).
 		SetFilter(filter)
 	if err := vortex.LoadVariables(variablePath); err != nil {
 		log.Warn("Unable to load variables due to ", err)
