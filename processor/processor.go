@@ -162,6 +162,7 @@ func (v *vortex) processTemplate(templatepath, outputpath string) error {
 		Funcs(template.FuncMap{
 			"vaultsecret": secrets.VaultFetchSecret,
 			"getenv":      os.Getenv,
+			"md5":         hashMd5,
 		}).
 		Parse(string(buff))
 	if err != nil {
