@@ -163,6 +163,8 @@ func (v *vortex) processTemplate(templatepath, outputpath string) error {
 			"vaultsecret": secrets.VaultFetchSecret,
 			"getenv":      os.Getenv,
 			"md5":         hashMd5,
+			"base64Encode": base64Encode,
+			"base64Decode": base64Decode,
 		}).
 		Parse(string(buff))
 	if err != nil {
