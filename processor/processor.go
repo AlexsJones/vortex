@@ -2,6 +2,7 @@ package processor
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -62,7 +63,7 @@ func (v *vortex) SetValidator(validator string) *vortex {
 }
 
 // LoadVariables will read from a file path and load Vortex with the variables ready
-func (v *vortex) LoadVariables(variablepath string) error {
+func (v *vortex) LoadVariables(variablepath string, overrideVariable string) error {
 	if _, err := os.Stat(variablepath); os.IsNotExist(err) {
 		// Possible that we have loaded variables already so
 		// it is safe to continue
@@ -75,7 +76,24 @@ func (v *vortex) LoadVariables(variablepath string) error {
 	if err != nil {
 		return err
 	}
-	return yaml.Unmarshal(buff, &(v.variables))
+
+	var overrideVar map[string]interface{}
+	if err := json.Unmarshal([]byte(overrideVariable), &overrideVar); err != nil {
+		// Nothing
+	}
+	var pathvars map[string]interface{}
+	if err := yaml.Unmarshal(buff, &pathvars); err != nil {
+		return err
+	}
+	v.variables = mergeVariables(pathvars, overrideVar)
+	return nil
+}
+
+func mergeVariables(a map[string]interface{}, b map[string]interface{}) map[string]interface{} {
+	for k, v := range b {
+		a[k] = v
+	}
+	return a
 }
 
 func (v *vortex) EnableStrict(enable bool) *vortex {
@@ -160,9 +178,9 @@ func (v *vortex) processTemplate(templatepath, outputpath string) error {
 	}
 	tmpl, err := template.New(path.Base(templatepath)).
 		Funcs(template.FuncMap{
-			"vaultsecret": secrets.VaultFetchSecret,
-			"getenv":      os.Getenv,
-			"md5":         hashMd5,
+			"vaultsecret":  secrets.VaultFetchSecret,
+			"getenv":       os.Getenv,
+			"md5":          hashMd5,
 			"base64Encode": base64Encode,
 			"base64Decode": base64Decode,
 		}).
