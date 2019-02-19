@@ -31,7 +31,7 @@ The flags being used are:
 var (
 	templatePath     string
 	variablePath     string
-	overrideVariable string
+	defaultVariable string
 	outputPath       string
 	filter           string
 	validator        string
@@ -46,7 +46,7 @@ func init() {
 	)
 	flag.StringVar(&templatePath, "template", blank, "path to the the directory or file to process")
 	flag.StringVar(&variablePath, "varpath", blank, "path to the variable config to use while processing")
-	flag.StringVar(&overrideVariable, "override-var", blank, "Json object that overrides values defined on variable-path")
+	flag.StringVar(&defaultVariable, "defaultvar", blank, "Json object that overrides values defined on variable-path")
 	flag.StringVar(&outputPath, "output", "./", "Output path for the rendered templates to be outputted")
 	flag.BoolVar(&validate, "validate", false, "validate syntax and check for the required variables")
 	flag.BoolVar(&debug, "verbose", false, "enable verbose logging")
@@ -65,7 +65,7 @@ func main() {
 		EnableStrict(validate).
 		SetValidator(validator).
 		SetFilter(filter)
-	if err := vortex.LoadVariables(variablePath, overrideVariable); err != nil {
+	if err := vortex.LoadVariables(variablePath, defaultVariable); err != nil {
 		log.Warn("Unable to load variables due to ", err)
 		os.Exit(1)
 	}

@@ -63,7 +63,8 @@ func (v *vortex) SetValidator(validator string) *vortex {
 }
 
 // LoadVariables will read from a file path and load Vortex with the variables ready
-func (v *vortex) LoadVariables(variablepath string, overrideVariable string) error {
+func (v *vortex) LoadVariables(variablepath string, defaultVariables string) error {
+	v.logMessage("Load variables")
 	if _, err := os.Stat(variablepath); os.IsNotExist(err) {
 		// Possible that we have loaded variables already so
 		// it is safe to continue
@@ -72,28 +73,33 @@ func (v *vortex) LoadVariables(variablepath string, overrideVariable string) err
 		}
 		return fmt.Errorf("%v is not a valid path", variablepath)
 	}
+
 	buff, err := ioutil.ReadFile(variablepath)
 	if err != nil {
 		return err
 	}
+	templatedbuff := templateVar(buff, defaultVariables)
 
-	var overrideVar map[string]interface{}
-	if err := json.Unmarshal([]byte(overrideVariable), &overrideVar); err != nil {
-		// Nothing
-	}
-	var pathvars map[string]interface{}
-	if err := yaml.Unmarshal(buff, &pathvars); err != nil {
-		return err
-	}
-	v.variables = mergeVariables(pathvars, overrideVar)
-	return nil
+	return yaml.Unmarshal(templatedbuff, &(v.variables))
 }
 
-func mergeVariables(a map[string]interface{}, b map[string]interface{}) map[string]interface{} {
-	for k, v := range b {
-		a[k] = v
+func templateVar(buff []byte, vars string) []byte {
+	var templatingVar map[string]interface{}
+	if err := json.Unmarshal([]byte(vars), &templatingVar); err != nil {
+		// Nothing
 	}
-	return a
+
+	tmpl, err := template.New("this-should-not-matter").
+		Parse(string(buff))
+	if err != nil {
+		return buff
+	}
+	writer := bytes.NewBuffer(nil)
+	if err = tmpl.Execute(writer, templatingVar); err != nil {
+		return buff
+	}
+
+	return writer.Bytes()
 }
 
 func (v *vortex) EnableStrict(enable bool) *vortex {
