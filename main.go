@@ -29,15 +29,15 @@ The flags being used are:
 )
 
 var (
-	templatePath     string
-	variablePath     string
+	templatePath   string
+	variablePath   string
 	variableConfig string
-	outputPath       string
-	filter           string
-	validator        string
-	debug            bool
-	validate         bool
-	vortex           = processor.New()
+	outputPath     string
+	filter         string
+	validator      string
+	debug          bool
+	validate       bool
+	vortex         = processor.New()
 )
 
 func init() {
