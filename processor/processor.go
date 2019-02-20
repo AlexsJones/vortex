@@ -63,7 +63,7 @@ func (v *vortex) SetValidator(validator string) *vortex {
 }
 
 // LoadVariables will read from a file path and load Vortex with the variables ready
-func (v *vortex) LoadVariables(variablepath string, defaultVariables string) error {
+func (v *vortex) LoadVariables(variablepath string, variablesConfig string) error {
 	v.logMessage("Load variables")
 	if _, err := os.Stat(variablepath); os.IsNotExist(err) {
 		// Possible that we have loaded variables already so
@@ -78,24 +78,30 @@ func (v *vortex) LoadVariables(variablepath string, defaultVariables string) err
 	if err != nil {
 		return err
 	}
-	templatedbuff := templateVar(buff, defaultVariables)
+	templatedbuff := v.templateVar(buff, variablesConfig)
 
 	return yaml.Unmarshal(templatedbuff, &(v.variables))
 }
 
-func templateVar(buff []byte, vars string) []byte {
-	var templatingVar map[string]interface{}
-	if err := json.Unmarshal([]byte(vars), &templatingVar); err != nil {
-		// Nothing
+func (v *vortex) templateVar(buff []byte, vars string) []byte {
+	if vars == "" {
+		return buff
+	}
+	var variables map[string]interface{}
+	if err := json.Unmarshal([]byte(vars), &variables); err != nil {
+		v.logMessage("Error unmarshalling:", err.Error())
+		return buff
 	}
 
 	tmpl, err := template.New("this-should-not-matter").
 		Parse(string(buff))
 	if err != nil {
+		v.logMessage("Error reading template:", err.Error())
 		return buff
 	}
 	writer := bytes.NewBuffer(nil)
-	if err = tmpl.Execute(writer, templatingVar); err != nil {
+	if err = tmpl.Execute(writer, variables); err != nil {
+		v.logMessage("Error executing template:", err.Error())
 		return buff
 	}
 
