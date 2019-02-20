@@ -131,7 +131,7 @@ roleRef:
   name: view
   apiGroup: ""
  ```
- 
+
 ### Loading a variable from a connected vault instance.
 ```
 env:
@@ -151,3 +151,44 @@ annotations:
 ```
 This enables secrets to be loaded via environment variables rather than alternative methods such as using `sed` over
 the template before processing.
+
+## VarpathConfig Example
+
+demo.yaml
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: console
+spec:
+  restartPolicy: Always
+  containers:
+    - name: {{.name}}
+      image: us.gcr.io/test:{{.tag}}
+
+```
+
+vars.yaml
+```
+name: "test"
+tag: {{.jobid}}
+```
+
+Run vortex:
+```
+export JOB_ID=1234
+vortex --template ./demo.tmpl --varpath-config "{\"jobid\":\"$JOB_ID\"}" --output ./deployment -varpath ./vars.yaml
+```
+
+The result;
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: console
+spec:
+  restartPolicy: Always
+  containers:
+    - name: test
+      image: us.gcr.io/test
+````
