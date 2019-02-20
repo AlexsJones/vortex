@@ -78,12 +78,12 @@ func (v *vortex) LoadVariables(variablepath string, variablesConfig string) erro
 	if err != nil {
 		return err
 	}
-	templatedbuff := v.templateVar(buff, variablesConfig)
+	templatedbuff := v.templateVarpath(buff, variablesConfig)
 
 	return yaml.Unmarshal(templatedbuff, &(v.variables))
 }
 
-func (v *vortex) templateVar(buff []byte, vars string) []byte {
+func (v *vortex) templateVarpath(buff []byte, vars string) []byte {
 	if vars == "" {
 		return buff
 	}
