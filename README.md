@@ -17,6 +17,14 @@ A simple template reader and variable injector
 
 - Used for when you have a bunch of templates (e.g. kubernetes files) and want to inject a yaml file of variables
 - Supports giving it a directory of nested templates and an output path (it will reproduce the directory structure)
+
+
+## Install
+
+`go get github.com/AlexsJones/vortex`
+
+_Or navigate to the releases page and install as a binary on the path_
+
 ## Example
 
 demo.tmpl
