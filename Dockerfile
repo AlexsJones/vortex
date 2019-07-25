@@ -13,4 +13,4 @@ WORKDIR /root/
 
 COPY --from=builder /go-modules/vortex .
 
-CMD ["./vortex"]
+ENTRYPOINT ["./vortex"]

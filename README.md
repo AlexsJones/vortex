@@ -25,6 +25,12 @@ A simple template reader and variable injector
 
 _Or navigate to the releases page and install as a binary on the path_
 
+### Run straight from docker on a local directory
+
+` docker run -v /home/foo/myproject:/tmp vortex:v1 -template /tmp/demo.yaml -output /tmp/deployment -varpath /tmp/vars.vortex`
+
+Outputs on `/home/foo/myproject/deployment`
+
 ## Example
 
 demo.tmpl
@@ -141,6 +147,7 @@ roleRef:
  ```
 
 ### Loading a variable from a connected vault instance.
+
 ```
 env:
     API_KEY: {{ vaultsecret "/secret/path/to/secret" "keyInDataMap" }}
@@ -151,12 +158,13 @@ For this to work, you will need to have:
 - VAULT_TOKEN exported in your shell if "${HOME}/.vault-token" isn't present
 
 Using environment variables inside your templates:
+
 ```
----
 annotations:
   UpdatedBy: {{ getenv "USER" }}
   SecretUsed: {{ getenv "SECRET_TOKEN" }}
 ```
+
 This enables secrets to be loaded via environment variables rather than alternative methods such as using `sed` over
 the template before processing.
 
@@ -167,3 +175,8 @@ the template before processing.
 go mod vendor
 docker build .
 ```
+
+
+#### Run from a docker image
+
+ `docker run -v /Users/alex/Work/vortex-test:/tmp vortex:v1 -template /tmp/demo.yaml -output /tmp/deployment -varpath /tmp/vars.vortex`
