@@ -63,7 +63,7 @@ spec:
 ## Usage
 
 ```
-vortex -template example/demo.tmpl -output test.txt -varpath example/vars.yaml
+vortex -template example/demo.yaml -output deployment -varpath example/vars.vortex
 
 ```
 
@@ -139,7 +139,7 @@ roleRef:
   name: view
   apiGroup: ""
  ```
- 
+
 ### Loading a variable from a connected vault instance.
 ```
 env:
@@ -159,3 +159,11 @@ annotations:
 ```
 This enables secrets to be loaded via environment variables rather than alternative methods such as using `sed` over
 the template before processing.
+
+
+#### Docker Build
+
+```
+go mod vendor
+docker build .
+```
