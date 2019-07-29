@@ -27,7 +27,7 @@ _Or navigate to the releases page and install as a binary on the path_
 
 ### Run straight from docker on a local directory
 
-` docker run -v /home/foo/myproject:/tmp vortex:v1 -template /tmp/demo.yaml -output /tmp/deployment -varpath /tmp/vars.vortex`
+` docker run -v /home/foo/myproject:/tmp tibbar/vortex:v1 -template /tmp/demo.yaml -output /tmp/deployment -varpath /tmp/vars.vortex`
 
 Outputs on `/home/foo/myproject/deployment`
 
