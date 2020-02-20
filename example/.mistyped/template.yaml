@@ -5,4 +5,4 @@
 Key : Type
 Hello: |
   Nice to meet you sonny
-Context; {{ .Image }}
+Context; {{{ .Image }}}

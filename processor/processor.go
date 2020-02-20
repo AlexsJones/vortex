@@ -158,13 +158,14 @@ func (v *vortex) processTemplate(templatepath, outputpath string) error {
 	if err != nil {
 		return err
 	}
-	tmpl, err := template.New(path.Base(templatepath)).
+	tmpl, err := template.New(path.Base(templatepath)).Delims("{{{", "}}}").
 		Funcs(template.FuncMap{
-			"vaultsecret": secrets.VaultFetchSecret,
-			"getenv":      os.Getenv,
-			"md5":         hashMd5,
+			"vaultsecret":  secrets.VaultFetchSecret,
+			"getenv":       os.Getenv,
+			"md5":          hashMd5,
 			"base64Encode": base64Encode,
 			"base64Decode": base64Decode,
+			"osRun":        osRun,
 		}).
 		Parse(string(buff))
 	if err != nil {

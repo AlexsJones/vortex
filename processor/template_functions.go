@@ -6,6 +6,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"os/exec"
+	"strings"
 )
 
 func hashMd5(text ...string) (string, error) {
@@ -15,7 +17,6 @@ func hashMd5(text ...string) (string, error) {
 	}
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
-
 
 func base64Decode(text ...string) (string, error) {
 	buff := bytes.NewBuffer(nil)
@@ -39,4 +40,13 @@ func base64Encode(text ...string) (string, error) {
 		}
 	}
 	return base64.StdEncoding.EncodeToString(buff.Bytes()), nil
+}
+
+func osRun(app string, arg ...string) (string, error) {
+	cmd := exec.Command(app, arg...)
+	stdout, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSuffix(string(stdout), "\n"), nil
 }

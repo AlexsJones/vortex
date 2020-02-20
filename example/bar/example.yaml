@@ -1,8 +1,8 @@
 ---
-Image: {{ .image }}
+Image: {{{ .image }}}
 
 items:
-    - {{ .image }}
-    - {{ .image }}
-    - {{ .image }}
-HomeDir: {{ getenv "HOME" }}
+    - {{{ .image }}}
+    - {{{ .image }}}
+    - {{{ .image }}}
+HomeDir: {{{ getenv "HOME" }}}

@@ -5,8 +5,8 @@ metadata:
 spec:
   restartPolicy: Always
   containers:
-    - name: {{.api.name}}
-      image: {{.api.image}}
+    - name: {{{.api.name}}}
+      image: {{{.api.image}}}
   someaddresses:
-    {{range .api.ipaddressrange}}
-    - ip: {{.}}{{end}}
+    {{{range .api.ipaddressrange}}}
+    - ip: {{{.}}}{{{end}}}
